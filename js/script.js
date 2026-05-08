@@ -1,11 +1,10 @@
 // ==================== تنظیمات ====================
-const REPO_OWNER = 'aminzebarjad';        // نام کاربری گیت‌هاب شما
-const REPO_NAME = 'chatter';              // نام مخزن
-const ADMIN_USERNAME = 'aminzebarjad';    // ادمین (فقط این شخص دکمهٔ پاک‌کردن و تغییر رمز را می‌بیند)
+const REPO_OWNER = 'aminzebarjad';
+const REPO_NAME = 'chatter';
+const ADMIN_USERNAME = 'aminzebarjad';
 const API_FILE_PATH = 'chat.json';
-const PASSWORD_FILE_PATH = 'password.json'; // فایل رمز چت‌روم
+const PASSWORD_FILE_PATH = 'password.json';
 
-// آدرس‌ها
 const RAW_URL = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/main/${API_FILE_PATH}`;
 const API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${API_FILE_PATH}`;
 const PASSWORD_RAW_URL = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/main/${PASSWORD_FILE_PATH}`;
@@ -99,7 +98,6 @@ function customConfirm(message) {
         function cleanup() {
             yesBtn.removeEventListener('click', onYes);
             noBtn.removeEventListener('click', onNo);
-            // همچنین با کلیک روی backdrop نباید بسته شود (اختیاری)
         }
 
         yesBtn.addEventListener('click', onYes);
@@ -555,87 +553,38 @@ document.getElementById('msgInput').addEventListener('keypress', (e) => {
     if (e.key === 'Enter') sendMessage();
 });
 
-// ==================== تولتیپ اختصاصی ====================
-function initTooltips() {
-    const tooltipTriggerElements = document.querySelectorAll('[data-tooltip]');
-    let currentTooltip = null;
+// ==================== پشتیبانی از تولتیپ در موبایل (بهترین تجربه) ====================
+function initMobileTooltips() {
+    const tooltipElements = document.querySelectorAll('[data-tooltip]');
+    let timeoutId = null;
 
-    function createTooltip(text) {
-        const tooltip = document.createElement('div');
-        tooltip.className = 'custom-tooltip';
-        tooltip.textContent = text;
-        document.body.appendChild(tooltip);
-        return tooltip;
-    }
-
-    function positionTooltip(tooltip, trigger) {
-        const rect = trigger.getBoundingClientRect();
-        const tooltipRect = tooltip.getBoundingClientRect();
-
-        let top = rect.top - tooltipRect.height - 6;
-        let left = rect.left + rect.width / 2 - tooltipRect.width / 2;
-
-        if (top < 10) {
-            top = rect.bottom + 6;
-        }
-        if (left < 10) left = 10;
-        if (left + tooltipRect.width > window.innerWidth - 10) {
-            left = window.innerWidth - tooltipRect.width - 10;
-        }
-
-        tooltip.style.top = `${top}px`;
-        tooltip.style.left = `${left}px`;
-    }
-
-    tooltipTriggerElements.forEach(trigger => {
-        trigger.addEventListener('mouseenter', () => {
-            const text = trigger.getAttribute('data-tooltip');
-            if (!text) return;
-
-            if (currentTooltip) {
-                currentTooltip.remove();
-                currentTooltip = null;
+    tooltipElements.forEach(el => {
+        el.addEventListener('touchstart', function(e) {
+            e.preventDefault(); // جلوگیری از کلیک همزمان در بعضی مرورگرها
+            // اگر قبلاً کلاس فعال داشته، حذف کن
+            if (this.classList.contains('tooltip-active')) {
+                this.classList.remove('tooltip-active');
+                if (timeoutId) clearTimeout(timeoutId);
+                return;
             }
-
-            currentTooltip = createTooltip(text);
-            positionTooltip(currentTooltip, trigger);
-            requestAnimationFrame(() => {
-                currentTooltip.classList.add('visible');
+            // ابتدا همه تولتیپ‌های دیگر را پاک کن
+            document.querySelectorAll('[data-tooltip].tooltip-active').forEach(active => {
+                active.classList.remove('tooltip-active');
             });
+            if (timeoutId) clearTimeout(timeoutId);
+            // نمایش تولتیپ فعلی
+            this.classList.add('tooltip-active');
+            // پس از ۲ ثانیه مخفی کن
+            timeoutId = setTimeout(() => {
+                this.classList.remove('tooltip-active');
+                timeoutId = null;
+            }, 2000);
         });
-
-        trigger.addEventListener('mouseleave', () => {
-            if (currentTooltip) {
-                currentTooltip.classList.remove('visible');
-                currentTooltip.addEventListener('transitionend', function handler() {
-                    if (currentTooltip && !currentTooltip.classList.contains('visible')) {
-                        currentTooltip.remove();
-                        currentTooltip = null;
-                    }
-                }, { once: true });
-                setTimeout(() => {
-                    if (currentTooltip && !currentTooltip.classList.contains('visible')) {
-                        currentTooltip.remove();
-                        currentTooltip = null;
-                    }
-                }, 300);
-            }
-        });
-    });
-
-    document.addEventListener('click', () => {
-        if (currentTooltip) {
-            currentTooltip.classList.remove('visible');
-            setTimeout(() => {
-                if (currentTooltip) {
-                    currentTooltip.remove();
-                    currentTooltip = null;
-                }
-            }, 300);
-        }
     });
 }
 
 // ==================== شروع برنامه ====================
-document.addEventListener('DOMContentLoaded', initTooltips);
+document.addEventListener('DOMContentLoaded', () => {
+    initMobileTooltips();
+});
 switchScreen('password');
