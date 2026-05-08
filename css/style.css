@@ -173,7 +173,7 @@ button:hover {
     object-fit: cover;
 }
 
-.logout-btn, .clear-chat-btn {
+.logout-btn, .clear-chat-btn, .change-password-btn {
     background: transparent;
     border: none;
     color: white;
@@ -182,12 +182,15 @@ button:hover {
     padding: 4px;
     border-radius: 50%;
     line-height: 1;
-    position: relative; /* برای موقعیت‌دهی تولتیپ */
+    position: relative;
 }
 .clear-chat-btn:hover {
     background: #ff6b6b55;
 }
-.clear-chat-btn.hidden {
+.change-password-btn:hover {
+    background: #ffb34755;
+}
+.clear-chat-btn.hidden, .change-password-btn.hidden {
     display: none;
 }
 
@@ -352,6 +355,60 @@ button:hover {
     transform: scale(1.3);
 }
 
+/* مودال مدرن */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.7);
+    backdrop-filter: blur(8px);
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+}
+.modal.show {
+    display: flex;
+    opacity: 1;
+}
+.modal-content {
+    background: #2d2d44;
+    border-radius: 28px;
+    padding: 30px;
+    width: 90%;
+    max-width: 400px;
+    text-align: center;
+    box-shadow: 0 30px 40px rgba(0,0,0,0.5);
+    transform: scale(0.9);
+    transition: transform 0.2s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+}
+.modal.show .modal-content {
+    transform: scale(1);
+}
+.modal-close {
+    float: left;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    color: #aaa;
+    transition: color 0.2s;
+}
+.modal-close:hover {
+    color: #fff;
+}
+.modal-content h3 {
+    margin-bottom: 20px;
+    font-size: 1.4em;
+}
+.modal-content input {
+    text-align: right;
+    margin-bottom: 15px;
+}
+
 /* رسپانسیو */
 @media (max-width: 600px) {
     .chat-container {
@@ -386,7 +443,6 @@ button:hover {
     z-index: 1000;
     box-shadow: 0 4px 15px rgba(0,0,0,0.4);
     backdrop-filter: blur(4px);
-    /* فلش کوچک پایین */
 }
 .custom-tooltip::after {
     content: "";
