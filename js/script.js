@@ -553,38 +553,145 @@ document.getElementById('msgInput').addEventListener('keypress', (e) => {
     if (e.key === 'Enter') sendMessage();
 });
 
-// ==================== پشتیبانی از تولتیپ در موبایل (بهترین تجربه) ====================
-function initMobileTooltips() {
-    const tooltipElements = document.querySelectorAll('[data-tooltip]');
-    let timeoutId = null;
+// ==================== سیستم تولتیپ حرفه‌ای (جاوااسکریپتی، بدون مشکل overflow) ====================
+let activeTooltip = null;
+let tooltipTimeout = null;
 
-    tooltipElements.forEach(el => {
-        el.addEventListener('touchstart', function(e) {
-            e.preventDefault(); // جلوگیری از کلیک همزمان در بعضی مرورگرها
-            // اگر قبلاً کلاس فعال داشته، حذف کن
-            if (this.classList.contains('tooltip-active')) {
-                this.classList.remove('tooltip-active');
-                if (timeoutId) clearTimeout(timeoutId);
+function createTooltip(text) {
+    const tooltip = document.createElement('div');
+    tooltip.className = 'custom-tooltip';
+    tooltip.textContent = text;
+    document.body.appendChild(tooltip);
+    return tooltip;
+}
+
+function positionTooltip(tooltip, target) {
+    const targetRect = target.getBoundingClientRect();
+    const tooltipRect = tooltip.getBoundingClientRect();
+    const spacing = 10; // فاصله از المان
+    
+    let top, left;
+    let direction = 'top'; // پیش‌فرض بالا
+    
+    // محاسبه فضای بالا و پایین
+    const spaceTop = targetRect.top - tooltipRect.height - spacing;
+    const spaceBottom = window.innerHeight - targetRect.bottom - tooltipRect.height - spacing;
+    
+    // تصمیم‌گیری: اگر فضای بالا بیشتر است یا پایین؟
+    if (spaceTop >= 0 && (spaceTop >= spaceBottom)) {
+        // نمایش در بالا
+        top = targetRect.top - tooltipRect.height - spacing;
+        direction = 'top';
+    } else if (spaceBottom >= 0) {
+        // نمایش در پایین
+        top = targetRect.bottom + spacing;
+        direction = 'bottom';
+    } else {
+        // اگر هیچکدام جا نشد، بالا با افست کمتر
+        top = Math.max(5, targetRect.top - tooltipRect.height - 5);
+        direction = 'top';
+    }
+    
+    // تنظیم افقی (وسط نسبت به المان)
+    left = targetRect.left + (targetRect.width / 2) - (tooltipRect.width / 2);
+    
+    // جلوگیری از خروج از صفحه در افقی
+    if (left < 5) left = 5;
+    if (left + tooltipRect.width > window.innerWidth - 5) {
+        left = window.innerWidth - tooltipRect.width - 5;
+    }
+    
+    tooltip.style.top = `${top}px`;
+    tooltip.style.left = `${left}px`;
+    
+    // کلاس جهت (برای افکت مثلث در CSS)
+    tooltip.classList.remove('tooltip-top', 'tooltip-bottom');
+    tooltip.classList.add(direction === 'top' ? 'tooltip-top' : 'tooltip-bottom');
+}
+
+function showTooltip(target, text) {
+    if (activeTooltip) {
+        activeTooltip.remove();
+        activeTooltip = null;
+    }
+    if (tooltipTimeout) clearTimeout(tooltipTimeout);
+    
+    activeTooltip = createTooltip(text);
+    positionTooltip(activeTooltip, target);
+    requestAnimationFrame(() => {
+        activeTooltip.classList.add('visible');
+    });
+}
+
+function hideTooltip() {
+    if (activeTooltip) {
+        activeTooltip.classList.remove('visible');
+        tooltipTimeout = setTimeout(() => {
+            if (activeTooltip && !activeTooltip.classList.contains('visible')) {
+                activeTooltip.remove();
+                activeTooltip = null;
+            }
+        }, 200);
+    }
+}
+
+function initTooltips() {
+    const elements = document.querySelectorAll('[data-tooltip]');
+    
+    // برای دسکتاپ (هاور)
+    elements.forEach(el => {
+        el.addEventListener('mouseenter', () => {
+            const text = el.getAttribute('data-tooltip');
+            if (text) showTooltip(el, text);
+        });
+        el.addEventListener('mouseleave', hideTooltip);
+    });
+    
+    // برای موبایل/تبلت (لمس)
+    let touchTimeout = null;
+    elements.forEach(el => {
+        el.addEventListener('touchstart', (e) => {
+            e.preventDefault(); // جلوگیری از کلیک همزمان
+            const text = el.getAttribute('data-tooltip');
+            if (!text) return;
+            
+            // اگر تولتیپ فعال است و روی همین المان است، مخفی کن
+            if (activeTooltip && activeTooltip._trigger === el) {
+                hideTooltip();
                 return;
             }
-            // ابتدا همه تولتیپ‌های دیگر را پاک کن
-            document.querySelectorAll('[data-tooltip].tooltip-active').forEach(active => {
-                active.classList.remove('tooltip-active');
-            });
-            if (timeoutId) clearTimeout(timeoutId);
-            // نمایش تولتیپ فعلی
-            this.classList.add('tooltip-active');
-            // پس از ۲ ثانیه مخفی کن
-            timeoutId = setTimeout(() => {
-                this.classList.remove('tooltip-active');
-                timeoutId = null;
+            
+            hideTooltip(); // مخفی کردن قبلی
+            showTooltip(el, text);
+            if (activeTooltip) activeTooltip._trigger = el;
+            
+            // بعد از 2 ثانیه مخفی کن
+            if (touchTimeout) clearTimeout(touchTimeout);
+            touchTimeout = setTimeout(() => {
+                hideTooltip();
+                touchTimeout = null;
             }, 2000);
         });
+    });
+    
+    // مخفی کردن هنگام کلیک روی جای دیگر
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('[data-tooltip]')) {
+            hideTooltip();
+        }
+    });
+    
+    // مخفی کردن هنگام اسکرول یا تغییر اندازه صفحه
+    window.addEventListener('scroll', hideTooltip);
+    window.addEventListener('resize', () => {
+        if (activeTooltip && activeTooltip._trigger) {
+            positionTooltip(activeTooltip, activeTooltip._trigger);
+        }
     });
 }
 
 // ==================== شروع برنامه ====================
 document.addEventListener('DOMContentLoaded', () => {
-    initMobileTooltips();
+    initTooltips();
 });
 switchScreen('password');
