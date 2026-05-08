@@ -59,7 +59,6 @@
                     <span id="currentUser" class="user-badge"></span>
                     <button id="logoutBtn" class="logout-btn" data-tooltip="خروج">🚪</button>
                     <button id="clearChatBtn" class="clear-chat-btn hidden" data-tooltip="پاک کردن چت">🗑️</button>
-                    <!-- دکمه تغییر رمز (فقط ادمین می‌بیند) -->
                     <button id="changePasswordBtn" class="change-password-btn hidden" data-tooltip="تغییر رمز چت‌روم">🔑</button>
                 </div>
             </div>
@@ -90,6 +89,17 @@
             <input type="password" id="confirmPasswordInput" placeholder="تأیید رمز جدید" autocomplete="off">
             <button id="submitPasswordChangeBtn">تغییر رمز</button>
             <p id="passwordChangeError" class="error-text"></p>
+        </div>
+    </div>
+
+    <!-- مودال اختصاصی confirm (جایگزین confirm پیش‌فرض) -->
+    <div id="customConfirmModal" class="custom-confirm">
+        <div class="custom-confirm-content">
+            <p class="custom-confirm-message" id="confirmMessage">آیا مطمئن هستید؟</p>
+            <div class="custom-confirm-buttons">
+                <button class="confirm-btn confirm-yes" id="confirmYesBtn">بله</button>
+                <button class="confirm-btn confirm-no" id="confirmNoBtn">خیر</button>
+            </div>
         </div>
     </div>
 
