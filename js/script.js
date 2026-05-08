@@ -1,7 +1,7 @@
 // ========== تنظیمات ==========
 const REPO_OWNER = 'aminzebarjad';        // ← نام کاربری صاحب مخزن
 const REPO_NAME = 'chatter';              // ← اسم مخزن
-const ADMIN_USERNAME = 'aminzebarjad';    // ← ادمین (فقط این شخص دکمه پاک کردن رو میبینه)
+const ADMIN_USERNAME = 'aminzebarjad';    // ← ادمین (فقط این شخص دکمهٔ پاک‌کردن را می‌بیند)
 const API_FILE_PATH = 'chat.json';
 const ROOM_PASSWORD = '1234';
 
@@ -12,14 +12,10 @@ const API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/content
 // وضعیت برنامه
 let currentToken = '';
 let currentUsername = '';
-let currentAvatar = '';  // آواتار کاربر جاری
+let currentAvatar = '';
 let messages = [];
 let refreshInterval = null;
-
-// ========== المان‌ها ==========
-const passwordScreen = document.getElementById('passwordScreen');
-const tokenScreen = document.getElementById('tokenScreen');
-const chatScreen = document.getElementById('chatScreen');
+let justSent = false;           // ← جلوگیری از پاک‌شدن پیام تازه
 
 // ========== ابزار صدا ==========
 let audioCtx = null;
@@ -39,7 +35,7 @@ function playNotificationSound() {
     oscillator.stop(audioCtx.currentTime + 0.15);
 }
 
-// ========== localStorage ==========
+// ========== LocalStorage ==========
 function saveToken(token) {
     localStorage.setItem('chatter_github_token', token);
 }
@@ -50,12 +46,17 @@ function clearToken() {
     localStorage.removeItem('chatter_github_token');
 }
 
+// ========== المان‌ها ==========
+const passwordScreen = document.getElementById('passwordScreen');
+const tokenScreen = document.getElementById('tokenScreen');
+const chatScreen = document.getElementById('chatScreen');
+
 // ========== راهنما ==========
 document.getElementById('showGuideBtn').addEventListener('click', () => {
     document.getElementById('guideBox').classList.toggle('visible');
 });
 
-// ========== دکمه‌های خروج و پاک کردن ==========
+// ========== دکمه‌های خروج و پاک‌کردن ==========
 document.getElementById('logoutBtn').addEventListener('click', () => {
     clearToken();
     currentToken = '';
@@ -94,8 +95,6 @@ async function attemptAutoLogin() {
         switchScreen('token');
         return;
     }
-    // تلاش برای ورود خودکار
-    const errorEl = document.getElementById('tokenError');
     try {
         const res = await fetch('https://api.github.com/user', {
             headers: { 'Authorization': `token ${savedToken}` }
@@ -152,7 +151,6 @@ async function connectManual() {
     }
 }
 
-// ========== تعویض صفحات ==========
 function switchScreen(name) {
     passwordScreen.classList.remove('active');
     tokenScreen.classList.remove('active');
@@ -167,32 +165,44 @@ function startChat() {
     document.getElementById('currentUser').innerHTML = `
         <img src="${currentAvatar}" alt="avatar"> ${currentUsername}
     `;
-    // دکمه پاک کردن فقط برای ادمین
     const clearBtn = document.getElementById('clearChatBtn');
     if (currentUsername === ADMIN_USERNAME) {
         clearBtn.classList.remove('hidden');
     } else {
         clearBtn.classList.add('hidden');
     }
-
+    justSent = false;
     loadMessages();
     if (refreshInterval) clearInterval(refreshInterval);
     refreshInterval = setInterval(loadMessages, 4000);
 }
 
-// ========== بارگذاری پیام‌ها ==========
+// ========== بارگذاری پیام‌ها (از API واقعی) ==========
 async function loadMessages() {
+    if (!currentToken) return;
     try {
-        const url = `${RAW_URL}?t=${Date.now()}`;
-        const res = await fetch(url);
+        const res = await fetch(API_URL, {
+            headers: { 'Authorization': `token ${currentToken}` }
+        });
         if (!res.ok) return;
         const data = await res.json();
-        const newJson = JSON.stringify(data);
-        if (newJson !== JSON.stringify(messages)) {
+        const content = JSON.parse(atob(data.content));
+
+        // اگر تازه پیام فرستاده‌ایم و نسخهٔ دریافتی قدیمی‌تر است، نادیده بگیر
+        if (justSent && content.length < messages.length) {
+            return;
+        }
+
+        // اگر محتوا با چیزی که الان داریم فرق دارد، بروزرسانی کن
+        if (JSON.stringify(content) !== JSON.stringify(messages)) {
             const isFirstLoad = messages.length === 0;
-            messages = data;
+            messages = content;
             renderMessages();
-            if (!isFirstLoad) playNotificationSound(); // فقط در به‌روزرسانی‌ها
+            if (!isFirstLoad) playNotificationSound();
+            // اگر بعد از ارسال، بالاخره نسخهٔ جدید رسید، پرچم را بردار
+            if (justSent && content.length >= messages.length) {
+                justSent = false;
+            }
         }
     } catch (e) {
         console.warn('بارگذاری پیام‌ها با خطا مواجه شد', e);
@@ -209,12 +219,11 @@ async function sendMessage() {
         sender: currentUsername,
         text: text,
         time: Date.now(),
-        avatar: currentAvatar   // ذخیره آواتار در پیام
+        avatar: currentAvatar
     };
 
     const updated = [...messages, newMsg];
     try {
-        // گرفتن sha
         const getRes = await fetch(API_URL, {
             headers: { 'Authorization': `token ${currentToken}` }
         });
@@ -239,10 +248,11 @@ async function sendMessage() {
             alert('خطا در ارسال: ' + err.message);
             return;
         }
+        // ارسال موفق
         input.value = '';
         messages = updated;
+        justSent = true;                // ← پرچم: منتظر تأیید نهایی هستیم
         renderMessages();
-        // فوکوس دوباره برای ارسال سریع
         input.focus();
     } catch (e) {
         alert('مشکل در ارسال پیام');
@@ -278,6 +288,7 @@ async function clearAllMessages() {
             return;
         }
         messages = [];
+        justSent = false;
         renderMessages();
     } catch (e) {
         alert('مشکل در پاک‌سازی چت');
@@ -291,7 +302,11 @@ function renderMessages() {
     messages.forEach(msg => {
         const div = document.createElement('div');
         div.className = `message ${msg.sender === currentUsername ? 'own' : ''}`;
-        const avatarUrl = msg.avatar || 'https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png';
+        // آواتار: اگر در پیام ذخیره شده باشد، همان؛ در غیر این صورت از عکس گیت‌هاب کاربر
+        let avatarUrl = msg.avatar;
+        if (!avatarUrl) {
+            avatarUrl = `https://github.com/${msg.sender}.png`;
+        }
         const timeStr = formatTime(msg.time);
         div.innerHTML = `
             <div class="msg-header">
@@ -391,5 +406,5 @@ document.getElementById('msgInput').addEventListener('keypress', (e) => {
     if (e.key === 'Enter') sendMessage();
 });
 
-// شروع با صفحه رمز
+// شروع با صفحهٔ رمز
 switchScreen('password');
