@@ -1,13 +1,15 @@
 // ==================== تنظیمات ====================
 const REPO_OWNER = 'aminzebarjad';        // نام کاربری گیت‌هاب شما
 const REPO_NAME = 'chatter';              // نام مخزن
-const ADMIN_USERNAME = 'aminzebarjad';    // ادمین (فقط این شخص دکمهٔ پاک‌کردن را می‌بیند)
+const ADMIN_USERNAME = 'aminzebarjad';    // ادمین (فقط این شخص دکمهٔ پاک‌کردن و تغییر رمز را می‌بیند)
 const API_FILE_PATH = 'chat.json';
-const ROOM_PASSWORD = '1234';
+const PASSWORD_FILE_PATH = 'password.json'; // فایل رمز چت‌روم
 
 // آدرس‌ها
 const RAW_URL = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/main/${API_FILE_PATH}`;
 const API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${API_FILE_PATH}`;
+const PASSWORD_RAW_URL = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/main/${PASSWORD_FILE_PATH}`;
+const PASSWORD_API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${PASSWORD_FILE_PATH}`;
 
 // ==================== ابزارهای UTF-8 ====================
 function utf8ToBase64(str) {
@@ -59,6 +61,19 @@ function clearToken() {
     localStorage.removeItem('chatter_github_token');
 }
 
+// ==================== رمز چت‌روم (دریافت از فایل password.json) ====================
+async function getCurrentChatPassword() {
+    try {
+        const res = await fetch(PASSWORD_RAW_URL);
+        if (!res.ok) throw new Error('فایل رمز یافت نشد');
+        const data = await res.json();
+        return data.password;
+    } catch (e) {
+        console.warn('خطا در دریافت رمز، استفاده از رمز پیش‌فرض 1234', e);
+        return '1234'; // fallback
+    }
+}
+
 // ==================== المان‌های DOM ====================
 const passwordScreen = document.getElementById('passwordScreen');
 const tokenScreen = document.getElementById('tokenScreen');
@@ -86,16 +101,99 @@ document.getElementById('clearChatBtn').addEventListener('click', async () => {
     await clearAllMessages();
 });
 
+// ==================== تغییر رمز (مودال) ====================
+const modal = document.getElementById('changePasswordModal');
+const closeModal = document.querySelector('.modal-close');
+const changePasswordBtn = document.getElementById('changePasswordBtn');
+const submitPasswordChange = document.getElementById('submitPasswordChangeBtn');
+
+function openModal() {
+    modal.classList.add('show');
+    document.getElementById('oldPasswordInput').value = '';
+    document.getElementById('newPasswordInput').value = '';
+    document.getElementById('confirmPasswordInput').value = '';
+    document.getElementById('passwordChangeError').textContent = '';
+}
+function closeModalFunc() {
+    modal.classList.remove('show');
+}
+closeModal.addEventListener('click', closeModalFunc);
+window.addEventListener('click', (e) => {
+    if (e.target === modal) closeModalFunc();
+});
+
+submitPasswordChange.addEventListener('click', async () => {
+    const oldPass = document.getElementById('oldPasswordInput').value.trim();
+    const newPass = document.getElementById('newPasswordInput').value.trim();
+    const confirmPass = document.getElementById('confirmPasswordInput').value.trim();
+    const errorEl = document.getElementById('passwordChangeError');
+
+    if (!oldPass || !newPass || !confirmPass) {
+        errorEl.textContent = 'همه فیلدها را پر کنید';
+        return;
+    }
+    if (newPass !== confirmPass) {
+        errorEl.textContent = 'رمز جدید و تأیید آن مطابقت ندارند';
+        return;
+    }
+    if (newPass.length < 3) {
+        errorEl.textContent = 'رمز جدید حداقل باید ۳ کاراکتر باشد';
+        return;
+    }
+
+    // دریافت رمز فعلی از فایل
+    const currentPass = await getCurrentChatPassword();
+    if (oldPass !== currentPass) {
+        errorEl.textContent = 'رمز فعلی اشتباه است';
+        return;
+    }
+
+    // ذخیره رمز جدید در گیت‌هاب با توکن ادمین
+    try {
+        const getRes = await fetch(PASSWORD_API_URL, {
+            headers: { 'Authorization': `token ${currentToken}` }
+        });
+        if (!getRes.ok) throw new Error('دریافت فایل رمز ناموفق');
+        const { sha } = await getRes.json();
+
+        const newContent = { password: newPass };
+        const putRes = await fetch(PASSWORD_API_URL, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `token ${currentToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                message: `تغییر رمز چت‌روم توسط ${currentUsername}`,
+                content: utf8ToBase64(JSON.stringify(newContent, null, 2)),
+                sha: sha
+            })
+        });
+
+        if (!putRes.ok) {
+            const err = await putRes.json();
+            errorEl.textContent = 'خطا در ذخیره رمز: ' + err.message;
+            return;
+        }
+
+        alert('✅ رمز چت‌روم با موفقیت تغییر کرد');
+        closeModalFunc();
+    } catch (e) {
+        errorEl.textContent = 'مشکل در ارتباط با گیت‌هاب';
+    }
+});
+
 // ==================== مرحله ۱: رمز عبور ====================
 document.getElementById('checkPasswordBtn').addEventListener('click', handlePassword);
 document.getElementById('roomPassword').addEventListener('keypress', (e) => {
     if (e.key === 'Enter') handlePassword();
 });
 
-function handlePassword() {
+async function handlePassword() {
     const pass = document.getElementById('roomPassword').value;
     const errorEl = document.getElementById('passwordError');
-    if (pass === ROOM_PASSWORD) {
+    const currentPass = await getCurrentChatPassword();
+    if (pass === currentPass) {
         errorEl.textContent = '';
         attemptAutoLogin();
     } else {
@@ -181,10 +279,14 @@ function startChat() {
         <img src="${currentAvatar}" alt="avatar"> ${currentUsername}
     `;
     const clearBtn = document.getElementById('clearChatBtn');
+    const changePassBtn = document.getElementById('changePasswordBtn');
     if (currentUsername === ADMIN_USERNAME) {
         clearBtn.classList.remove('hidden');
+        changePassBtn.classList.remove('hidden');
+        changePassBtn.addEventListener('click', openModal);
     } else {
         clearBtn.classList.add('hidden');
+        changePassBtn.classList.add('hidden');
     }
     justSent = false;
     loadMessages();
@@ -192,7 +294,7 @@ function startChat() {
     refreshInterval = setInterval(loadMessages, 4000);
 }
 
-// ==================== بارگذاری پیام‌ها (از API واقعی، بدون تأخیر) ====================
+// ==================== بارگذاری پیام‌ها ====================
 async function loadMessages() {
     if (!currentToken) return;
     try {
@@ -203,18 +305,15 @@ async function loadMessages() {
         const data = await res.json();
         const content = JSON.parse(base64ToUtf8(data.content));
 
-        // اگر تازه پیام فرستاده‌ایم و نسخهٔ دریافتی قدیمی‌تر است، نادیده بگیر
         if (justSent && content.length < messages.length) {
             return;
         }
 
-        // اگر محتوا با چیزی که الان داریم فرق دارد، بروزرسانی کن
         if (JSON.stringify(content) !== JSON.stringify(messages)) {
             const isFirstLoad = messages.length === 0;
             messages = content;
             renderMessages();
             if (!isFirstLoad) playNotificationSound();
-            // اگر بعد از ارسال، بالاخره نسخهٔ جدید رسید، پرچم را بردار
             if (justSent && content.length >= messages.length) {
                 justSent = false;
             }
@@ -239,14 +338,12 @@ async function sendMessage() {
 
     const updated = [...messages, newMsg];
     try {
-        // دریافت آخرین SHA
         const getRes = await fetch(API_URL, {
             headers: { 'Authorization': `token ${currentToken}` }
         });
         if (!getRes.ok) throw new Error('دریافت فایل ناموفق');
         const { sha } = await getRes.json();
 
-        // ذخیره با UTF-8 ایمن
         const putRes = await fetch(API_URL, {
             method: 'PUT',
             headers: {
@@ -266,7 +363,6 @@ async function sendMessage() {
             return;
         }
 
-        // ارسال موفق
         input.value = '';
         messages = updated;
         justSent = true;
@@ -320,7 +416,6 @@ function renderMessages() {
     messages.forEach(msg => {
         const div = document.createElement('div');
         div.className = `message ${msg.sender === currentUsername ? 'own' : ''}`;
-        // آواتار: اگر ذخیره شده باشد، همان؛ در غیر این صورت از عکس گیت‌هاب
         let avatarUrl = msg.avatar;
         if (!avatarUrl) {
             avatarUrl = `https://github.com/${msg.sender}.png`;
@@ -411,7 +506,6 @@ function insertEmoji(emoji) {
     input.focus();
 }
 
-// بستن پنل با کلیک بیرون
 document.addEventListener('click', (e) => {
     if (!emojiPicker.contains(e.target) && e.target !== document.getElementById('emojiBtn')) {
         emojiPicker.classList.remove('visible');
@@ -441,15 +535,12 @@ function initTooltips() {
         const rect = trigger.getBoundingClientRect();
         const tooltipRect = tooltip.getBoundingClientRect();
 
-        // بالای دکمه
         let top = rect.top - tooltipRect.height - 6;
         let left = rect.left + rect.width / 2 - tooltipRect.width / 2;
 
-        // اگر از بالای صفحه خارج می‌شد، زیر آن نمایش بده
         if (top < 10) {
             top = rect.bottom + 6;
         }
-        // تنظیم افقی
         if (left < 10) left = 10;
         if (left + tooltipRect.width > window.innerWidth - 10) {
             left = window.innerWidth - tooltipRect.width - 10;
@@ -471,7 +562,6 @@ function initTooltips() {
 
             currentTooltip = createTooltip(text);
             positionTooltip(currentTooltip, trigger);
-            // نمایش تدریجی
             requestAnimationFrame(() => {
                 currentTooltip.classList.add('visible');
             });
@@ -486,7 +576,6 @@ function initTooltips() {
                         currentTooltip = null;
                     }
                 }, { once: true });
-                // پاک‌سازی اجباری بعد از زمان کوتاه
                 setTimeout(() => {
                     if (currentTooltip && !currentTooltip.classList.contains('visible')) {
                         currentTooltip.remove();
@@ -495,12 +584,8 @@ function initTooltips() {
                 }, 300);
             }
         });
-
-        // پاک‌سازی هنگام خروج از صفحه
-        trigger.addEventListener('mouseleave', () => {}, { passive: true }); // فقط برای یکسان‌سازی
     });
 
-    // پاک‌سازی کلی هنگام کلیک (اگر کاربر روی دکمه کلیک کرد، تولتیپ بسته شود)
     document.addEventListener('click', () => {
         if (currentTooltip) {
             currentTooltip.classList.remove('visible');
@@ -516,6 +601,4 @@ function initTooltips() {
 
 // ==================== شروع برنامه ====================
 document.addEventListener('DOMContentLoaded', initTooltips);
-
-// ==================== شروع با صفحهٔ رمز ====================
 switchScreen('password');
