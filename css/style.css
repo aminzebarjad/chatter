@@ -355,7 +355,7 @@ button:hover {
     transform: scale(1.3);
 }
 
-/* مودال مدرن */
+/* مودال تغییر رمز (قبلی) */
 .modal {
     display: none;
     position: fixed;
@@ -409,6 +409,92 @@ button:hover {
     margin-bottom: 15px;
 }
 
+/* ==================== مودال اختصاصی confirm (جدید) ==================== */
+.custom-confirm {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(8px);
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.custom-confirm.show {
+    display: flex;
+    opacity: 1;
+}
+
+.custom-confirm-content {
+    background: linear-gradient(145deg, #2d2d44, #25253a);
+    padding: 35px 30px;
+    border-radius: 40px;
+    width: 90%;
+    max-width: 380px;
+    text-align: center;
+    box-shadow: 0 30px 50px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(108, 99, 255, 0.2);
+    transform: scale(0.8);
+    transition: transform 0.3s cubic-bezier(0.34, 1.2, 0.64, 1);
+}
+
+.custom-confirm.show .custom-confirm-content {
+    transform: scale(1);
+}
+
+.custom-confirm-message {
+    font-size: 1.3rem;
+    margin-bottom: 30px;
+    color: #fff;
+    font-weight: 500;
+    line-height: 1.5;
+    word-break: break-word;
+}
+
+.custom-confirm-buttons {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+}
+
+.confirm-btn {
+    flex: 1;
+    padding: 12px 0;
+    border-radius: 60px;
+    font-size: 1rem;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.confirm-yes {
+    background: linear-gradient(135deg, #6c63ff, #8b44f0);
+    color: white;
+    box-shadow: 0 4px 15px rgba(108, 99, 255, 0.3);
+}
+
+.confirm-yes:hover {
+    transform: translateY(-2px);
+    background: linear-gradient(135deg, #5a52e0, #7a3ad0);
+    box-shadow: 0 8px 20px rgba(108, 99, 255, 0.4);
+}
+
+.confirm-no {
+    background: #3a3a55;
+    color: #ddd;
+}
+
+.confirm-no:hover {
+    background: #4a4a6e;
+    transform: translateY(-2px);
+}
+
 /* رسپانسیو */
 @media (max-width: 600px) {
     .chat-container {
@@ -421,12 +507,22 @@ button:hover {
     .picker-content {
         grid-template-columns: repeat(6, 1fr);
     }
+    .custom-confirm-content {
+        padding: 25px 20px;
+        width: 85%;
+    }
+    .custom-confirm-message {
+        font-size: 1.1rem;
+    }
+    .confirm-btn {
+        padding: 10px 0;
+    }
 }
 
 /* ==================== تولتیپ اختصاصی ==================== */
 .custom-tooltip {
     position: absolute;
-    bottom: 130%;           /* بالای دکمه */
+    bottom: 130%;
     left: 50%;
     transform: translateX(-50%);
     background: linear-gradient(135deg, #6c63ff, #9b59b6);
