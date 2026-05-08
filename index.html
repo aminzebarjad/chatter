@@ -17,7 +17,7 @@
         </div>
     </div>
 
-    <!-- مرحله ۲: دریافت توکن و نام کاربری -->
+    <!-- مرحله ۲: دریافت توکن (در صورت نیاز) -->
     <div id="tokenScreen" class="screen">
         <div class="card wide">
             <h2>🔗 اتصال به حساب گیت‌هاب</h2>
@@ -33,7 +33,7 @@
                     <li>به آدرس <a href="https://github.com/settings/tokens" target="_blank">github.com/settings/tokens</a> برو.</li>
                     <li>روی <strong>Generate new token</strong> (classic) کلیک کن.</li>
                     <li>یک اسم براش بذار (مثلاً ChatRoom).</li>
-                    <li>در بخش <strong>Select scopes</strong>، تیک <strong>repo</strong> و <strong>user</strong> (یا فقط user:email) رو بزن.</li>
+                    <li>در بخش <strong>Select scopes</strong>، تیک <strong>repo</strong> و <strong>user</strong> رو بزن.</li>
                     <li>پایین صفحه رو بزن <strong>Generate token</strong>.</li>
                     <li>⚠️ توکن رو کپی کن و همین‌جا وارد کن. (فقط همین یک‌بار نشون داده می‌شه).</li>
                 </ol>
@@ -52,13 +52,28 @@
     <div id="chatScreen" class="screen">
         <div class="chat-container">
             <div class="chat-header">
-                <span>💬 چت‌روم</span>
-                <span id="currentUser" class="user-badge"></span>
+                <div class="header-left">
+                    <span>💬 چت‌روم</span>
+                </div>
+                <div class="header-right">
+                    <span id="currentUser" class="user-badge"></span>
+                    <button id="logoutBtn" class="logout-btn" title="خروج">🚪</button>
+                    <button id="clearChatBtn" class="clear-chat-btn hidden" title="پاک کردن چت">🗑️</button>
+                </div>
             </div>
             <div id="messages" class="chat-messages"></div>
             <div class="chat-input-area">
-                <button id="sendBtn" class="send-btn">↵</button>
+                <button id="emojiBtn" class="emoji-btn">😊</button>
                 <input type="text" id="msgInput" placeholder="پیامت رو بنویس..." autocomplete="off">
+                <button id="sendBtn" class="send-btn">↵</button>
+            </div>
+            <!-- پنل اموجی و استیکر -->
+            <div id="emojiPicker" class="emoji-picker hidden">
+                <div class="picker-tabs">
+                    <button class="tab active" data-tab="emojis">اموجی</button>
+                    <button class="tab" data-tab="stickers">استیکر</button>
+                </div>
+                <div class="picker-content" id="pickerContent"></div>
             </div>
         </div>
     </div>
