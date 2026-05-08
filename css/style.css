@@ -15,56 +15,78 @@ body {
     padding: 10px;
 }
 
-/* ==================== اسکرول بار مدرن برای کل صفحه و تمام قسمت‌های قابل اسکرول ==================== */
+/* ==================== اسکرول بار عمومی (کل صفحه) ==================== */
 ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-    background: rgba(30, 30, 47, 0.6);
+    background: rgba(30, 30, 47, 0.7);
     border-radius: 10px;
     backdrop-filter: blur(4px);
-    margin: 4px 0;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: linear-gradient(145deg, #6c63ff, #8b44f0);
+    background: linear-gradient(135deg, #6c63ff, #9b59b6);
     border-radius: 10px;
     transition: all 0.2s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(145deg, #5a52e0, #7a3ad0);
-    transform: scale(1.05);
+    background: linear-gradient(135deg, #5a52e0, #8b44f0);
+    box-shadow: 0 0 6px rgba(108, 99, 255, 0.5);
 }
 
-/* برای فایرفاکس (اسکرول بار زیبا) */
+/* Firefox */
 * {
     scrollbar-width: thin;
     scrollbar-color: #6c63ff #2d2d44;
 }
 
-/* اسکرول بار اختصاصی برای بخش پیام‌ها با کمی ضخامت بیشتر */
+/* ==================== اسکرول بار اختصاصی برای بخش پیام‌ها (chat-messages) ==================== */
+.chat-messages {
+    flex: 1;
+    padding: 15px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: #1e1e2f;
+    scroll-behavior: smooth;
+}
+
+/* Webkit (Chrome, Edge, Safari) - استایل اختصاصی برای پیام‌ها */
 .chat-messages::-webkit-scrollbar {
     width: 10px;
+    background-color: transparent;
 }
 
 .chat-messages::-webkit-scrollbar-track {
-    background: rgba(30, 30, 47, 0.8);
+    background: rgba(45, 45, 68, 0.6);
     border-radius: 12px;
     margin: 8px 0;
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(108, 99, 255, 0.15);
 }
 
 .chat-messages::-webkit-scrollbar-thumb {
-    background: linear-gradient(145deg, #6c63ff, #9b59b6);
+    background: linear-gradient(145deg, #6c63ff, #b388ff);
     border-radius: 12px;
     transition: all 0.25s ease;
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .chat-messages::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(145deg, #5a52e0, #8b44f0);
-    box-shadow: 0 0 6px rgba(108, 99, 255, 0.5);
+    background: linear-gradient(145deg, #5a52e0, #a06eff);
+    transform: scale(1.02);
+    box-shadow: 0 0 8px #6c63ff;
+}
+
+/* Firefox - برای بخش پیام‌ها */
+.chat-messages {
+    scrollbar-width: thin;
+    scrollbar-color: #6c63ff #2d2d44;
 }
 
 .screen {
@@ -244,17 +266,6 @@ button:hover {
 }
 .clear-chat-btn.hidden, .change-password-btn.hidden {
     display: none;
-}
-
-.chat-messages {
-    flex: 1;
-    padding: 15px;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    background: #1e1e2f;
-    /* اسکرول بار اختصاصی بالاتر تنظیم شد */
 }
 
 .message {
@@ -622,5 +633,15 @@ button:hover {
     }
     .confirm-btn {
         padding: 10px 0;
+    }
+}
+
+/* ریسپانسیو اسکرول بار در موبایل */
+@media (max-width: 768px) {
+    ::-webkit-scrollbar {
+        width: 6px;
+    }
+    .chat-messages::-webkit-scrollbar {
+        width: 8px;
     }
 }
