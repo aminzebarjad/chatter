@@ -30,7 +30,7 @@ let currentUsername = '';
 let currentAvatar = '';
 let messages = [];
 let refreshInterval = null;
-let justSent = false;                // جلوگیری از پاک‌شدن پیام تازه ارسال‌شده
+let justSent = false;
 
 // ==================== صدای نوتیفیکیشن ====================
 let audioCtx = null;
@@ -70,8 +70,41 @@ async function getCurrentChatPassword() {
         return data.password;
     } catch (e) {
         console.warn('خطا در دریافت رمز، استفاده از رمز پیش‌فرض 1234', e);
-        return '1234'; // fallback
+        return '1234';
     }
+}
+
+// ==================== مودال اختصاصی confirm (جایگزین confirm پیش‌فرض) ====================
+function customConfirm(message) {
+    return new Promise((resolve) => {
+        const modal = document.getElementById('customConfirmModal');
+        const messageEl = document.getElementById('confirmMessage');
+        const yesBtn = document.getElementById('confirmYesBtn');
+        const noBtn = document.getElementById('confirmNoBtn');
+
+        messageEl.textContent = message;
+        modal.classList.add('show');
+
+        const onYes = () => {
+            modal.classList.remove('show');
+            cleanup();
+            resolve(true);
+        };
+        const onNo = () => {
+            modal.classList.remove('show');
+            cleanup();
+            resolve(false);
+        };
+
+        function cleanup() {
+            yesBtn.removeEventListener('click', onYes);
+            noBtn.removeEventListener('click', onNo);
+            // همچنین با کلیک روی backdrop نباید بسته شود (اختیاری)
+        }
+
+        yesBtn.addEventListener('click', onYes);
+        noBtn.addEventListener('click', onNo);
+    });
 }
 
 // ==================== المان‌های DOM ====================
@@ -84,21 +117,27 @@ document.getElementById('showGuideBtn').addEventListener('click', () => {
     document.getElementById('guideBox').classList.toggle('visible');
 });
 
-// ==================== خروج و پاک‌سازی ====================
-document.getElementById('logoutBtn').addEventListener('click', () => {
-    clearToken();
-    currentToken = '';
-    currentUsername = '';
-    currentAvatar = '';
-    messages = [];
-    if (refreshInterval) clearInterval(refreshInterval);
-    switchScreen('password');
+// ==================== خروج (با confirm اختصاصی) ====================
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+    const confirmed = await customConfirm('آیا از خروج مطمئنی؟');
+    if (confirmed) {
+        clearToken();
+        currentToken = '';
+        currentUsername = '';
+        currentAvatar = '';
+        messages = [];
+        if (refreshInterval) clearInterval(refreshInterval);
+        switchScreen('password');
+    }
 });
 
+// ==================== پاک کردن چت (با confirm اختصاصی) ====================
 document.getElementById('clearChatBtn').addEventListener('click', async () => {
     if (currentUsername !== ADMIN_USERNAME) return;
-    if (!confirm('آیا از پاک کردن تمام پیام‌ها مطمئنی؟')) return;
-    await clearAllMessages();
+    const confirmed = await customConfirm('آیا از پاک کردن تمام پیام‌ها مطمئنی؟');
+    if (confirmed) {
+        await clearAllMessages();
+    }
 });
 
 // ==================== تغییر رمز (مودال) ====================
@@ -141,14 +180,12 @@ submitPasswordChange.addEventListener('click', async () => {
         return;
     }
 
-    // دریافت رمز فعلی از فایل
     const currentPass = await getCurrentChatPassword();
     if (oldPass !== currentPass) {
         errorEl.textContent = 'رمز فعلی اشتباه است';
         return;
     }
 
-    // ذخیره رمز جدید در گیت‌هاب با توکن ادمین
     try {
         const getRes = await fetch(PASSWORD_API_URL, {
             headers: { 'Authorization': `token ${currentToken}` }
