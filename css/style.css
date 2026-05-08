@@ -123,7 +123,7 @@ button:hover {
     margin-bottom: 0;
 }
 
-/* محیط چت */
+/* چت */
 .chat-container {
     display: flex;
     flex-direction: column;
@@ -134,23 +134,60 @@ button:hover {
     overflow: hidden;
     box-shadow: 0 20px 40px rgba(0,0,0,0.5);
     width: 100%;
+    position: relative;
 }
 
 .chat-header {
     background: #373752;
-    padding: 15px 20px;
-    font-size: 1.2em;
-    font-weight: bold;
+    padding: 10px 15px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-shrink: 0;
+}
+
+.header-left {
+    font-size: 1.1em;
+    font-weight: bold;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .user-badge {
     font-size: 0.8em;
     background: #6c63ff;
-    padding: 5px 12px;
+    padding: 4px 10px;
     border-radius: 20px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.user-badge img {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.logout-btn, .clear-chat-btn {
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 1.2em;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 50%;
+    line-height: 1;
+}
+.clear-chat-btn:hover {
+    background: #ff6b6b55;
+}
+.clear-chat-btn.hidden {
+    display: none;
 }
 
 .chat-messages {
@@ -166,15 +203,25 @@ button:hover {
 .message {
     display: flex;
     flex-direction: column;
-    max-width: 80%;
+    max-width: 85%;
     align-self: flex-start;
 }
 
-.message .sender {
-    font-size: 0.75em;
+.message .msg-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+}
+.message .msg-header .sender-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+.message .msg-header .sender-name {
+    font-size: 0.8em;
     color: #a0a0c0;
-    margin-bottom: 3px;
-    margin-right: 8px;
 }
 
 .message .text {
@@ -183,45 +230,125 @@ button:hover {
     border-radius: 18px 18px 18px 4px;
     line-height: 1.5;
     word-wrap: break-word;
+    display: inline-block;
+}
+
+.message .time {
+    font-size: 0.65em;
+    color: #7a7a9a;
+    margin-top: 4px;
+    margin-right: 8px;
 }
 
 .message.own {
     align-self: flex-end;
 }
-
 .message.own .text {
     background: #6c63ff;
     border-radius: 18px 18px 4px 18px;
 }
+.message.own .msg-header {
+    justify-content: flex-end;
+}
 
+/* منطقه ورودی */
 .chat-input-area {
     display: flex;
-    gap: 10px;
-    padding: 12px;
+    gap: 8px;
+    padding: 10px;
     background: #373752;
     align-items: center;
+    flex-shrink: 0;
 }
 
 .chat-input-area input {
     flex: 1;
     margin-bottom: 0;
     border-radius: 25px;
-    padding: 12px 15px;
+    padding: 10px 15px;
     background: #2d2d44;
     text-align: right;
+    border: none;
+    color: white;
 }
 
 .send-btn {
     border-radius: 50%;
-    width: 48px;
-    height: 48px;
-    font-size: 1.5em;
+    width: 44px;
+    height: 44px;
+    font-size: 1.3em;
     padding: 0;
     display: flex;
     align-items: center;
     justify-content: center;
     margin: 0;
     background: #6c63ff;
+    border: none;
+    color: white;
+}
+.emoji-btn {
+    background: transparent;
+    border: none;
+    font-size: 1.5em;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 50%;
+    line-height: 1;
+}
+
+/* پنل اموجی */
+.emoji-picker {
+    background: #2d2d44;
+    border-top: 1px solid #444;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    max-height: 250px;
+    overflow-y: auto;
+    display: none;
+    z-index: 10;
+    border-bottom-left-radius: 20px;
+    border-bottom-right-radius: 20px;
+}
+.emoji-picker.visible {
+    display: block;
+}
+
+.picker-tabs {
+    display: flex;
+    justify-content: space-around;
+    padding: 8px;
+    background: #373752;
+}
+.picker-tabs .tab {
+    background: transparent;
+    border: none;
+    color: #aaa;
+    font-size: 1em;
+    cursor: pointer;
+    padding: 4px 12px;
+    border-bottom: 2px solid transparent;
+}
+.picker-tabs .tab.active {
+    color: white;
+    border-bottom-color: #6c63ff;
+}
+
+.picker-content {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 6px;
+    padding: 10px;
+    justify-items: center;
+}
+.picker-content .emoji-item {
+    font-size: 1.5em;
+    cursor: pointer;
+    transition: transform 0.1s;
+}
+.picker-content .emoji-item:hover {
+    transform: scale(1.3);
 }
 
 /* رسپانسیو */
@@ -232,5 +359,8 @@ button:hover {
     }
     .card {
         padding: 20px;
+    }
+    .picker-content {
+        grid-template-columns: repeat(6, 1fr);
     }
 }
