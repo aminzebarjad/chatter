@@ -59,6 +59,8 @@
                     <span id="currentUser" class="user-badge"></span>
                     <button id="logoutBtn" class="logout-btn" data-tooltip="خروج">🚪</button>
                     <button id="clearChatBtn" class="clear-chat-btn hidden" data-tooltip="پاک کردن چت">🗑️</button>
+                    <!-- دکمه تغییر رمز (فقط ادمین می‌بیند) -->
+                    <button id="changePasswordBtn" class="change-password-btn hidden" data-tooltip="تغییر رمز چت‌روم">🔑</button>
                 </div>
             </div>
             <div id="messages" class="chat-messages"></div>
@@ -75,6 +77,19 @@
                 </div>
                 <div class="picker-content" id="pickerContent"></div>
             </div>
+        </div>
+    </div>
+
+    <!-- مودال تغییر رمز (فقط برای ادمین) -->
+    <div id="changePasswordModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close">&times;</span>
+            <h3>🔐 تغییر رمز چت‌روم</h3>
+            <input type="password" id="oldPasswordInput" placeholder="رمز فعلی" autocomplete="off">
+            <input type="password" id="newPasswordInput" placeholder="رمز جدید" autocomplete="off">
+            <input type="password" id="confirmPasswordInput" placeholder="تأیید رمز جدید" autocomplete="off">
+            <button id="submitPasswordChangeBtn">تغییر رمز</button>
+            <p id="passwordChangeError" class="error-text"></p>
         </div>
     </div>
 
