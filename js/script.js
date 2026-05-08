@@ -424,5 +424,98 @@ document.getElementById('msgInput').addEventListener('keypress', (e) => {
     if (e.key === 'Enter') sendMessage();
 });
 
+// ==================== تولتیپ اختصاصی ====================
+function initTooltips() {
+    const tooltipTriggerElements = document.querySelectorAll('[data-tooltip]');
+    let currentTooltip = null;
+
+    function createTooltip(text) {
+        const tooltip = document.createElement('div');
+        tooltip.className = 'custom-tooltip';
+        tooltip.textContent = text;
+        document.body.appendChild(tooltip);
+        return tooltip;
+    }
+
+    function positionTooltip(tooltip, trigger) {
+        const rect = trigger.getBoundingClientRect();
+        const tooltipRect = tooltip.getBoundingClientRect();
+
+        // بالای دکمه
+        let top = rect.top - tooltipRect.height - 6;
+        let left = rect.left + rect.width / 2 - tooltipRect.width / 2;
+
+        // اگر از بالای صفحه خارج می‌شد، زیر آن نمایش بده
+        if (top < 10) {
+            top = rect.bottom + 6;
+        }
+        // تنظیم افقی
+        if (left < 10) left = 10;
+        if (left + tooltipRect.width > window.innerWidth - 10) {
+            left = window.innerWidth - tooltipRect.width - 10;
+        }
+
+        tooltip.style.top = `${top}px`;
+        tooltip.style.left = `${left}px`;
+    }
+
+    tooltipTriggerElements.forEach(trigger => {
+        trigger.addEventListener('mouseenter', () => {
+            const text = trigger.getAttribute('data-tooltip');
+            if (!text) return;
+
+            if (currentTooltip) {
+                currentTooltip.remove();
+                currentTooltip = null;
+            }
+
+            currentTooltip = createTooltip(text);
+            positionTooltip(currentTooltip, trigger);
+            // نمایش تدریجی
+            requestAnimationFrame(() => {
+                currentTooltip.classList.add('visible');
+            });
+        });
+
+        trigger.addEventListener('mouseleave', () => {
+            if (currentTooltip) {
+                currentTooltip.classList.remove('visible');
+                currentTooltip.addEventListener('transitionend', function handler() {
+                    if (currentTooltip && !currentTooltip.classList.contains('visible')) {
+                        currentTooltip.remove();
+                        currentTooltip = null;
+                    }
+                }, { once: true });
+                // پاک‌سازی اجباری بعد از زمان کوتاه
+                setTimeout(() => {
+                    if (currentTooltip && !currentTooltip.classList.contains('visible')) {
+                        currentTooltip.remove();
+                        currentTooltip = null;
+                    }
+                }, 300);
+            }
+        });
+
+        // پاک‌سازی هنگام خروج از صفحه
+        trigger.addEventListener('mouseleave', () => {}, { passive: true }); // فقط برای یکسان‌سازی
+    });
+
+    // پاک‌سازی کلی هنگام کلیک (اگر کاربر روی دکمه کلیک کرد، تولتیپ بسته شود)
+    document.addEventListener('click', () => {
+        if (currentTooltip) {
+            currentTooltip.classList.remove('visible');
+            setTimeout(() => {
+                if (currentTooltip) {
+                    currentTooltip.remove();
+                    currentTooltip = null;
+                }
+            }, 300);
+        }
+    });
+}
+
+// ==================== شروع برنامه ====================
+document.addEventListener('DOMContentLoaded', initTooltips);
+
 // ==================== شروع با صفحهٔ رمز ====================
 switchScreen('password');
