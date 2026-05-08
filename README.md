@@ -1,4 +1,3 @@
-```markdown
 <div align="center">
   <h1>💬 چتر | Chatter</h1>
   <p><strong>یک چت‌روم رمزنگاری‌شده، اختصاصی و مبتنی بر گیت‌هاب</strong></p>
