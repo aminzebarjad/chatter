@@ -491,36 +491,9 @@ button:hover {
     transform: translateY(-2px);
 }
 
-/* ==================== تولتیپ مدرن (بازنویسی کامل) ==================== */
-[data-tooltip] {
-    position: relative;
-    cursor: pointer;
-}
-
-/* مثلث و متن تولتیپ */
-[data-tooltip]::before,
-[data-tooltip]::after {
-    position: absolute;
-    visibility: hidden;
-    opacity: 0;
-    transition: opacity 0.2s ease, visibility 0.2s ease, transform 0.2s ease;
-    pointer-events: none;
-    z-index: 999;
-}
-
-/* مثلث */
-[data-tooltip]::before {
-    content: "";
-    border: 6px solid transparent;
-    border-top-color: #9b59b6; /* هماهنگ با گرادیانت */
-    bottom: 100%;
-    left: 50%;
-    transform: translateX(-50%) translateY(4px);
-}
-
-/* محتوای متن */
-[data-tooltip]::after {
-    content: attr(data-tooltip);
+/* ==================== تولتیپ جدید (جاوااسکریپتی، بدون محدودیت overflow) ==================== */
+.custom-tooltip {
+    position: fixed;
     background: linear-gradient(135deg, #6c63ff, #9b59b6);
     color: #fff;
     font-size: 0.75rem;
@@ -528,64 +501,54 @@ button:hover {
     padding: 6px 12px;
     border-radius: 20px;
     white-space: nowrap;
-    bottom: 100%;
-    left: 50%;
-    transform: translateX(-50%) translateY(-6px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     backdrop-filter: blur(4px);
     letter-spacing: 0.3px;
     line-height: 1.4;
+    z-index: 10000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0.2s ease, transform 0.2s ease;
+    pointer-events: none;
+    transform: translateY(0);
 }
 
-/* نمایش در هاور (دسکتاپ) و کلاس فعال (موبایل) */
-[data-tooltip]:hover::before,
-[data-tooltip]:hover::after,
-[data-tooltip].tooltip-active::before,
-[data-tooltip].tooltip-active::after {
-    visibility: visible;
+.custom-tooltip.visible {
     opacity: 1;
+    visibility: visible;
+    transform: translateY(-4px);
 }
 
-[data-tooltip]:hover::after,
-[data-tooltip].tooltip-active::after {
-    transform: translateX(-50%) translateY(-10px);
-}
-[data-tooltip]:hover::before,
-[data-tooltip].tooltip-active::before {
-    transform: translateX(-50%) translateY(2px);
+/* مثلث برای جهت بالا و پایین */
+.custom-tooltip::before {
+    content: "";
+    position: absolute;
+    border: 6px solid transparent;
+    left: 50%;
+    transform: translateX(-50%);
 }
 
-/* ===== مدیریت ریسپانسیو تولتیپ (جلوگیری از خروج از صفحه) ===== */
+.custom-tooltip.tooltip-top::before {
+    bottom: -12px;
+    border-top-color: #9b59b6;
+}
+
+.custom-tooltip.tooltip-bottom::before {
+    top: -12px;
+    border-bottom-color: #9b59b6;
+}
+
+/* ریسپانسیو برای موبایل */
 @media (max-width: 768px) {
-    [data-tooltip]::after {
+    .custom-tooltip {
         white-space: normal;
-        min-width: 120px;
         max-width: 200px;
         text-align: center;
         font-size: 0.7rem;
-    }
-    /* اگر تولتیپ از سمت چپ/راست خارج می‌شد، می‌توان با left: auto و right: 0 جابجا کرد */
-    [data-tooltip]:active::after,
-    [data-tooltip]:active::before {
-        visibility: visible;
-        opacity: 1;
+        padding: 5px 10px;
     }
 }
 
-/* برای دکمه‌های کوچک در هدر که ممکن است جا نباشد */
-.header-right [data-tooltip]::after {
-    white-space: nowrap;
-}
-@media (max-width: 480px) {
-    .header-right [data-tooltip]::after {
-        white-space: normal;
-        width: 90px;
-        font-size: 0.65rem;
-        padding: 4px 8px;
-    }
-}
-
-/* رسپانسیو عمومی */
 @media (max-width: 600px) {
     .chat-container {
         height: 100vh;
