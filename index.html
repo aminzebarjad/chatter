@@ -65,6 +65,7 @@
             <div id="messages" class="chat-messages"></div>
             <div class="chat-input-area">
                 <button id="emojiBtn" class="emoji-btn" data-tooltip="اموجی و استیکر">😊</button>
+                <button id="voiceBtn" class="voice-btn" data-tooltip="پیام صوتی">🎤</button>
                 <input type="text" id="msgInput" placeholder="پیامت رو بنویس..." autocomplete="off">
                 <button id="sendBtn" class="send-btn" data-tooltip="ارسال">↵</button>
             </div>
@@ -75,6 +76,15 @@
                     <button class="tab" data-tab="stickers">استیکر</button>
                 </div>
                 <div class="picker-content" id="pickerContent"></div>
+            </div>
+            <!-- وضعیت ضبط صدا -->
+            <div id="recordingIndicator" class="recording-indicator hidden">
+                <div class="recording-wave">
+                    <span></span><span></span><span></span><span></span>
+                </div>
+                <span class="recording-time">0:00</span>
+                <button id="cancelRecordingBtn" class="cancel-recording" data-tooltip="لغو">✖</button>
+                <button id="sendRecordingBtn" class="send-recording" data-tooltip="ارسال">✔</button>
             </div>
         </div>
     </div>
