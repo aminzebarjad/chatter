@@ -5,7 +5,6 @@ const ADMIN_USERNAME = 'aminzebarjad';
 const API_FILE_PATH = 'chat.json';
 const PASSWORD_FILE_PATH = 'password.json';
 
-const RAW_URL = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/main/${API_FILE_PATH}`;
 const API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${API_FILE_PATH}`;
 const PASSWORD_RAW_URL = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/main/${PASSWORD_FILE_PATH}`;
 const PASSWORD_API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${PASSWORD_FILE_PATH}`;
@@ -327,6 +326,13 @@ function startChat() {
     loadMessages();
     if (refreshInterval) clearInterval(refreshInterval);
     refreshInterval = setInterval(loadMessages, 4000);
+    
+    // اتصال ماژول صدا به تابع ارسال پیام
+    if (window.voiceManager) {
+        window.voiceManager.setOnSend(async (base64Audio, duration) => {
+            await sendVoiceMessage(base64Audio, duration);
+        });
+    }
 }
 
 // ==================== بارگذاری پیام‌ها ====================
@@ -351,6 +357,10 @@ async function loadMessages() {
             if (!isFirstLoad) playNotificationSound();
             if (justSent && content.length >= messages.length) {
                 justSent = false;
+            }
+            // اتصال پلیرهای صوتی جدید
+            if (window.voiceManager) {
+                VoiceManager.attachVoicePlayers();
             }
         }
     } catch (e) {
@@ -409,7 +419,7 @@ async function sendMessage() {
     }
 }
 
-// ==================== ارسال پیام صوتی (با پشتیبانی از base64) ====================
+// ==================== ارسال پیام صوتی ====================
 async function sendVoiceMessage(base64Audio, duration) {
     if (!currentToken || !currentUsername) {
         alert('لطفاً ابتدا وارد شوید');
@@ -421,7 +431,7 @@ async function sendVoiceMessage(base64Audio, duration) {
         time: Date.now(),
         avatar: currentAvatar,
         type: 'voice',
-        data: base64Audio,  // ذخیره به صورت data:audio/webm;base64,...
+        data: base64Audio,
         duration: duration
     };
 
@@ -498,7 +508,7 @@ async function clearAllMessages() {
     }
 }
 
-// ==================== نمایش پیام‌ها (پشتیبانی از ویس) ====================
+// ==================== نمایش پیام‌ها ====================
 function renderMessages() {
     const container = document.getElementById('messages');
     container.innerHTML = '';
@@ -512,10 +522,9 @@ function renderMessages() {
         
         let contentHtml = '';
         if (msg.type === 'voice' && msg.data) {
-            // پیام صوتی
             const duration = msg.duration || 0;
             const minutes = Math.floor(duration / 60);
-            const seconds = Math.floor(duration % 60);
+            const seconds = duration % 60;
             const durationText = `${minutes}:${seconds.toString().padStart(2, '0')}`;
             contentHtml = `
                 <div class="voice-message" data-audio="${msg.data}" data-duration="${duration}">
@@ -527,7 +536,6 @@ function renderMessages() {
                 </div>
             `;
         } else {
-            // پیام متنی (سازگاری با پیام‌های قدیمی)
             const text = msg.text || '';
             contentHtml = `<span class="text">${escapeHtml(text)}</span>`;
         }
@@ -542,48 +550,6 @@ function renderMessages() {
         `;
         container.appendChild(div);
     });
-    
-    // راه‌اندازی رویدادهای پخش صدا
-    document.querySelectorAll('.voice-message').forEach(voiceDiv => {
-        const playBtn = voiceDiv.querySelector('.voice-play-btn');
-        const waveDiv = voiceDiv.querySelector('.voice-wave');
-        const audioData = voiceDiv.getAttribute('data-audio');
-        let audio = null;
-        
-        playBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            if (audio && !audio.paused) {
-                audio.pause();
-                audio.currentTime = 0;
-                playBtn.textContent = '▶️';
-                waveDiv.classList.remove('playing');
-                audio = null;
-                return;
-            }
-            if (audio) {
-                audio.play();
-                playBtn.textContent = '⏸️';
-                waveDiv.classList.add('playing');
-                return;
-            }
-            // ساخت آبجکت صوتی از base64
-            try {
-                audio = new Audio(audioData);
-                audio.addEventListener('ended', () => {
-                    playBtn.textContent = '▶️';
-                    waveDiv.classList.remove('playing');
-                    audio = null;
-                });
-                audio.play();
-                playBtn.textContent = '⏸️';
-                waveDiv.classList.add('playing');
-            } catch (err) {
-                console.error('پخش صدا ممکن نیست', err);
-                alert('خطا در پخش صدا');
-            }
-        });
-    });
-    
     container.scrollTop = container.scrollHeight;
 }
 
@@ -604,150 +570,7 @@ function escapeHtml(text) {
     return text.replace(/[&<>"']/g, m => map[m]);
 }
 
-// ==================== ضبط صدا (بازنویسی کامل با منطق صحیح) ====================
-let mediaRecorderVoice = null;
-let audioChunksVoice = [];
-let recordingStartTimeVoice = null;
-let recordingTimerVoice = null;
-let recordingStreamVoice = null;
-let shouldSendVoice = false;  // مشخص می‌کند بعد از توقف، ارسال شود یا نه
-
-const voiceBtnVoice = document.getElementById('voiceBtn');
-const recordingIndicatorVoice = document.getElementById('recordingIndicator');
-const recordingTimeSpanVoice = document.querySelector('.recording-time');
-const cancelRecordingBtnVoice = document.getElementById('cancelRecordingBtn');
-const sendRecordingBtnVoice = document.getElementById('sendRecordingBtn');
-
-// توقف کامل ضبط و بستن stream
-function stopRecordingAndCleanup() {
-    if (mediaRecorderVoice && mediaRecorderVoice.state === 'recording') {
-        mediaRecorderVoice.stop();
-    }
-    if (recordingStreamVoice) {
-        recordingStreamVoice.getTracks().forEach(track => track.stop());
-        recordingStreamVoice = null;
-    }
-    if (recordingTimerVoice) {
-        clearInterval(recordingTimerVoice);
-        recordingTimerVoice = null;
-    }
-    recordingIndicatorVoice.classList.add('hidden');
-}
-
-// راه‌اندازی تایمر
-function startRecordingTimerVoice() {
-    if (recordingTimerVoice) clearInterval(recordingTimerVoice);
-    recordingTimerVoice = setInterval(() => {
-        if (!recordingStartTimeVoice) return;
-        const elapsed = Math.floor((Date.now() - recordingStartTimeVoice) / 1000);
-        const minutes = Math.floor(elapsed / 60);
-        const seconds = elapsed % 60;
-        recordingTimeSpanVoice.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-        // حداکثر 60 ثانیه
-        if (elapsed >= 60) {
-            // توقف خودکار و ارسال
-            if (mediaRecorderVoice && mediaRecorderVoice.state === 'recording') {
-                shouldSendVoice = true;
-                mediaRecorderVoice.stop();
-            }
-        }
-    }, 100);
-}
-
-// شروع ضبط
-voiceBtnVoice.addEventListener('click', async () => {
-    if (mediaRecorderVoice && mediaRecorderVoice.state === 'recording') {
-        // اگر در حال ضبط است، آن را متوقف و ارسال کن (مانند واتساپ: کلیک روی میکروفون هنگام ضبط یعنی ارسال)
-        shouldSendVoice = true;
-        mediaRecorderVoice.stop();
-        return;
-    }
-    // درخواست دسترسی به میکروفون
-    try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        recordingStreamVoice = stream;
-        mediaRecorderVoice = new MediaRecorder(stream);
-        audioChunksVoice = [];
-        
-        mediaRecorderVoice.ondataavailable = (event) => {
-            if (event.data.size > 0) {
-                audioChunksVoice.push(event.data);
-            }
-        };
-        
-        mediaRecorderVoice.onstop = async () => {
-            // توقف ضبط – بر اساس shouldSendVoice تصمیم می‌گیریم
-            const duration = (Date.now() - recordingStartTimeVoice) / 1000;
-            if (shouldSendVoice && audioChunksVoice.length > 0 && duration >= 0.5) {
-                const blob = new Blob(audioChunksVoice, { type: 'audio/webm' });
-                const reader = new FileReader();
-                reader.onloadend = async () => {
-                    const base64Audio = reader.result; // data:audio/webm;base64,...
-                    const success = await sendVoiceMessage(base64Audio, Math.floor(duration));
-                    if (!success) {
-                        alert('متأسفانه ارسال پیام صوتی با خطا مواجه شد. لطفاً دوباره تلاش کنید.');
-                    }
-                    resetRecordingVoice();
-                };
-                reader.readAsDataURL(blob);
-            } else {
-                // لغو شده یا مدت کوتاه
-                resetRecordingVoice();
-            }
-            // reset flags
-            shouldSendVoice = false;
-        };
-        
-        mediaRecorderVoice.start(100);
-        recordingStartTimeVoice = Date.now();
-        shouldSendVoice = false;
-        recordingIndicatorVoice.classList.remove('hidden');
-        startRecordingTimerVoice();
-        
-    } catch (err) {
-        console.error('دسترسی به میکروفون ممکن نیست', err);
-        alert('برای ارسال پیام صوتی باید دسترسی به میکروفون را اجازه دهید.');
-    }
-});
-
-// لغو ضبط
-cancelRecordingBtnVoice.addEventListener('click', () => {
-    shouldSendVoice = false;
-    if (mediaRecorderVoice && mediaRecorderVoice.state === 'recording') {
-        mediaRecorderVoice.stop();
-    } else {
-        resetRecordingVoice();
-    }
-});
-
-// ارسال ضبط (دکمه سبز)
-sendRecordingBtnVoice.addEventListener('click', () => {
-    shouldSendVoice = true;
-    if (mediaRecorderVoice && mediaRecorderVoice.state === 'recording') {
-        mediaRecorderVoice.stop();
-    } else {
-        // اگر به هر دلیلی ضبط فعال نبود، خطا نده
-        resetRecordingVoice();
-    }
-});
-
-function resetRecordingVoice() {
-    if (recordingStreamVoice) {
-        recordingStreamVoice.getTracks().forEach(track => track.stop());
-        recordingStreamVoice = null;
-    }
-    if (recordingTimerVoice) {
-        clearInterval(recordingTimerVoice);
-        recordingTimerVoice = null;
-    }
-    recordingIndicatorVoice.classList.add('hidden');
-    audioChunksVoice = [];
-    recordingStartTimeVoice = null;
-    mediaRecorderVoice = null;
-    shouldSendVoice = false;
-}
-
-// ==================== پنل اموجی ====================
+// ==================== پنل اموجی و استیکر ====================
 const emojis = [
     '😀','😂','😍','😎','😢','😡','👍','👎','❤️','🔥',
     '🎉','💔','🤣','🥲','😊','😇','🙂','😴','🤔','😉',
