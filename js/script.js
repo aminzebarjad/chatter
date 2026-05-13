@@ -409,16 +409,19 @@ async function sendMessage() {
     }
 }
 
-// ==================== ارسال پیام صوتی ====================
-async function sendVoiceMessage(base64Data, duration) {
-    if (!currentToken || !currentUsername) return;
+// ==================== ارسال پیام صوتی (با پشتیبانی از base64) ====================
+async function sendVoiceMessage(base64Audio, duration) {
+    if (!currentToken || !currentUsername) {
+        alert('لطفاً ابتدا وارد شوید');
+        return false;
+    }
 
     const newMsg = {
         sender: currentUsername,
         time: Date.now(),
         avatar: currentAvatar,
         type: 'voice',
-        data: base64Data,
+        data: base64Audio,  // ذخیره به صورت data:audio/webm;base64,...
         duration: duration
     };
 
@@ -445,15 +448,17 @@ async function sendVoiceMessage(base64Data, duration) {
 
         if (!putRes.ok) {
             const err = await putRes.json();
-            alert('خطا در ارسال ویس: ' + err.message);
-            return;
+            alert('خطا در ارسال پیام صوتی: ' + err.message);
+            return false;
         }
 
         messages = updated;
         justSent = true;
         renderMessages();
+        return true;
     } catch (e) {
-        alert('مشکل در ارسال پیام صوتی');
+        alert('مشکل در ارسال پیام صوتی: ' + e.message);
+        return false;
     }
 }
 
@@ -544,7 +549,6 @@ function renderMessages() {
         const waveDiv = voiceDiv.querySelector('.voice-wave');
         const audioData = voiceDiv.getAttribute('data-audio');
         let audio = null;
-        let isPlaying = false;
         
         playBtn.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -553,14 +557,13 @@ function renderMessages() {
                 audio.currentTime = 0;
                 playBtn.textContent = '▶️';
                 waveDiv.classList.remove('playing');
-                isPlaying = false;
+                audio = null;
                 return;
             }
             if (audio) {
                 audio.play();
                 playBtn.textContent = '⏸️';
                 waveDiv.classList.add('playing');
-                isPlaying = true;
                 return;
             }
             // ساخت آبجکت صوتی از base64
@@ -569,12 +572,11 @@ function renderMessages() {
                 audio.addEventListener('ended', () => {
                     playBtn.textContent = '▶️';
                     waveDiv.classList.remove('playing');
-                    isPlaying = false;
+                    audio = null;
                 });
                 audio.play();
                 playBtn.textContent = '⏸️';
                 waveDiv.classList.add('playing');
-                isPlaying = true;
             } catch (err) {
                 console.error('پخش صدا ممکن نیست', err);
                 alert('خطا در پخش صدا');
@@ -602,123 +604,148 @@ function escapeHtml(text) {
     return text.replace(/[&<>"']/g, m => map[m]);
 }
 
-// ==================== ضبط صدا ====================
-let mediaRecorder = null;
-let audioChunks = [];
-let recordingStartTime = null;
-let recordingTimer = null;
-let recordingStream = null;
+// ==================== ضبط صدا (بازنویسی کامل با منطق صحیح) ====================
+let mediaRecorderVoice = null;
+let audioChunksVoice = [];
+let recordingStartTimeVoice = null;
+let recordingTimerVoice = null;
+let recordingStreamVoice = null;
+let shouldSendVoice = false;  // مشخص می‌کند بعد از توقف، ارسال شود یا نه
 
-const voiceBtn = document.getElementById('voiceBtn');
-const recordingIndicator = document.getElementById('recordingIndicator');
-const recordingTimeSpan = document.querySelector('.recording-time');
-const cancelRecordingBtn = document.getElementById('cancelRecordingBtn');
-const sendRecordingBtn = document.getElementById('sendRecordingBtn');
+const voiceBtnVoice = document.getElementById('voiceBtn');
+const recordingIndicatorVoice = document.getElementById('recordingIndicator');
+const recordingTimeSpanVoice = document.querySelector('.recording-time');
+const cancelRecordingBtnVoice = document.getElementById('cancelRecordingBtn');
+const sendRecordingBtnVoice = document.getElementById('sendRecordingBtn');
 
-voiceBtn.addEventListener('click', async () => {
-    if (mediaRecorder && mediaRecorder.state === 'recording') {
-        // در حال ضبط است – متوقف کن
-        stopRecordingAndSend(false);
+// توقف کامل ضبط و بستن stream
+function stopRecordingAndCleanup() {
+    if (mediaRecorderVoice && mediaRecorderVoice.state === 'recording') {
+        mediaRecorderVoice.stop();
+    }
+    if (recordingStreamVoice) {
+        recordingStreamVoice.getTracks().forEach(track => track.stop());
+        recordingStreamVoice = null;
+    }
+    if (recordingTimerVoice) {
+        clearInterval(recordingTimerVoice);
+        recordingTimerVoice = null;
+    }
+    recordingIndicatorVoice.classList.add('hidden');
+}
+
+// راه‌اندازی تایمر
+function startRecordingTimerVoice() {
+    if (recordingTimerVoice) clearInterval(recordingTimerVoice);
+    recordingTimerVoice = setInterval(() => {
+        if (!recordingStartTimeVoice) return;
+        const elapsed = Math.floor((Date.now() - recordingStartTimeVoice) / 1000);
+        const minutes = Math.floor(elapsed / 60);
+        const seconds = elapsed % 60;
+        recordingTimeSpanVoice.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        // حداکثر 60 ثانیه
+        if (elapsed >= 60) {
+            // توقف خودکار و ارسال
+            if (mediaRecorderVoice && mediaRecorderVoice.state === 'recording') {
+                shouldSendVoice = true;
+                mediaRecorderVoice.stop();
+            }
+        }
+    }, 100);
+}
+
+// شروع ضبط
+voiceBtnVoice.addEventListener('click', async () => {
+    if (mediaRecorderVoice && mediaRecorderVoice.state === 'recording') {
+        // اگر در حال ضبط است، آن را متوقف و ارسال کن (مانند واتساپ: کلیک روی میکروفون هنگام ضبط یعنی ارسال)
+        shouldSendVoice = true;
+        mediaRecorderVoice.stop();
         return;
     }
     // درخواست دسترسی به میکروفون
     try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        recordingStream = stream;
-        mediaRecorder = new MediaRecorder(stream);
-        audioChunks = [];
+        recordingStreamVoice = stream;
+        mediaRecorderVoice = new MediaRecorder(stream);
+        audioChunksVoice = [];
         
-        mediaRecorder.ondataavailable = (event) => {
+        mediaRecorderVoice.ondataavailable = (event) => {
             if (event.data.size > 0) {
-                audioChunks.push(event.data);
+                audioChunksVoice.push(event.data);
             }
         };
         
-        mediaRecorder.onstop = async () => {
-            // توقف ضبط – آماده ارسال
-            const duration = (Date.now() - recordingStartTime) / 1000;
-            if (audioChunks.length === 0 || duration < 0.5) {
-                alert('صدایی ضبط نشد. لطفاً دوباره تلاش کنید.');
-                resetRecording();
-                return;
+        mediaRecorderVoice.onstop = async () => {
+            // توقف ضبط – بر اساس shouldSendVoice تصمیم می‌گیریم
+            const duration = (Date.now() - recordingStartTimeVoice) / 1000;
+            if (shouldSendVoice && audioChunksVoice.length > 0 && duration >= 0.5) {
+                const blob = new Blob(audioChunksVoice, { type: 'audio/webm' });
+                const reader = new FileReader();
+                reader.onloadend = async () => {
+                    const base64Audio = reader.result; // data:audio/webm;base64,...
+                    const success = await sendVoiceMessage(base64Audio, Math.floor(duration));
+                    if (!success) {
+                        alert('متأسفانه ارسال پیام صوتی با خطا مواجه شد. لطفاً دوباره تلاش کنید.');
+                    }
+                    resetRecordingVoice();
+                };
+                reader.readAsDataURL(blob);
+            } else {
+                // لغو شده یا مدت کوتاه
+                resetRecordingVoice();
             }
-            const blob = new Blob(audioChunks, { type: 'audio/webm' });
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                const base64Audio = reader.result; // data:audio/webm;base64,...
-                sendVoiceMessage(base64Audio, Math.floor(duration));
-                resetRecording();
-            };
-            reader.readAsDataURL(blob);
+            // reset flags
+            shouldSendVoice = false;
         };
         
-        mediaRecorder.start(100);
-        recordingStartTime = Date.now();
-        recordingIndicator.classList.remove('hidden');
-        startRecordingTimer();
+        mediaRecorderVoice.start(100);
+        recordingStartTimeVoice = Date.now();
+        shouldSendVoice = false;
+        recordingIndicatorVoice.classList.remove('hidden');
+        startRecordingTimerVoice();
         
     } catch (err) {
         console.error('دسترسی به میکروفون ممکن نیست', err);
-        alert('برای ارسال پیام صوتی باید دسترسی به میکروفون را允许 دهید.');
+        alert('برای ارسال پیام صوتی باید دسترسی به میکروفون را اجازه دهید.');
     }
 });
 
-function startRecordingTimer() {
-    if (recordingTimer) clearInterval(recordingTimer);
-    recordingTimer = setInterval(() => {
-        if (!recordingStartTime) return;
-        const elapsed = Math.floor((Date.now() - recordingStartTime) / 1000);
-        const minutes = Math.floor(elapsed / 60);
-        const seconds = elapsed % 60;
-        recordingTimeSpan.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-        // حداکثر 60 ثانیه
-        if (elapsed >= 60) {
-            stopRecordingAndSend(true);
-        }
-    }, 100);
-}
-
-function stopRecordingAndSend(send = false) {
-    if (mediaRecorder && mediaRecorder.state === 'recording') {
-        mediaRecorder.stop();
+// لغو ضبط
+cancelRecordingBtnVoice.addEventListener('click', () => {
+    shouldSendVoice = false;
+    if (mediaRecorderVoice && mediaRecorderVoice.state === 'recording') {
+        mediaRecorderVoice.stop();
+    } else {
+        resetRecordingVoice();
     }
-    if (recordingStream) {
-        recordingStream.getTracks().forEach(track => track.stop());
-        recordingStream = null;
-    }
-    if (recordingTimer) {
-        clearInterval(recordingTimer);
-        recordingTimer = null;
-    }
-    recordingIndicator.classList.add('hidden');
-    if (!send) {
-        // لغو
-        audioChunks = [];
-        recordingStartTime = null;
-    }
-    // برای ارسال، در onstop هندل می‌شود
-}
-
-function resetRecording() {
-    if (recordingStream) {
-        recordingStream.getTracks().forEach(track => track.stop());
-        recordingStream = null;
-    }
-    if (recordingTimer) clearInterval(recordingTimer);
-    recordingIndicator.classList.add('hidden');
-    audioChunks = [];
-    recordingStartTime = null;
-    mediaRecorder = null;
-}
-
-cancelRecordingBtn.addEventListener('click', () => {
-    stopRecordingAndSend(false);
-    resetRecording();
 });
 
-sendRecordingBtn.addEventListener('click', () => {
-    stopRecordingAndSend(true);
+// ارسال ضبط (دکمه سبز)
+sendRecordingBtnVoice.addEventListener('click', () => {
+    shouldSendVoice = true;
+    if (mediaRecorderVoice && mediaRecorderVoice.state === 'recording') {
+        mediaRecorderVoice.stop();
+    } else {
+        // اگر به هر دلیلی ضبط فعال نبود، خطا نده
+        resetRecordingVoice();
+    }
 });
+
+function resetRecordingVoice() {
+    if (recordingStreamVoice) {
+        recordingStreamVoice.getTracks().forEach(track => track.stop());
+        recordingStreamVoice = null;
+    }
+    if (recordingTimerVoice) {
+        clearInterval(recordingTimerVoice);
+        recordingTimerVoice = null;
+    }
+    recordingIndicatorVoice.classList.add('hidden');
+    audioChunksVoice = [];
+    recordingStartTimeVoice = null;
+    mediaRecorderVoice = null;
+    shouldSendVoice = false;
+}
 
 // ==================== پنل اموجی ====================
 const emojis = [
