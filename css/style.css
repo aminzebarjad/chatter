@@ -15,7 +15,7 @@ body {
     padding: 10px;
 }
 
-/* ==================== اسکرول بار عمومی (کل صفحه) ==================== */
+/* ==================== اسکرول بار ==================== */
 ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
@@ -38,13 +38,12 @@ body {
     box-shadow: 0 0 6px rgba(108, 99, 255, 0.5);
 }
 
-/* Firefox */
 * {
     scrollbar-width: thin;
     scrollbar-color: #6c63ff #2d2d44;
 }
 
-/* ==================== اسکرول بار اختصاصی برای بخش پیام‌ها (chat-messages) ==================== */
+/* اسکرول بار اختصاصی پیام‌ها */
 .chat-messages {
     flex: 1;
     padding: 15px;
@@ -56,10 +55,8 @@ body {
     scroll-behavior: smooth;
 }
 
-/* Webkit (Chrome, Edge, Safari) - استایل اختصاصی برای پیام‌ها */
 .chat-messages::-webkit-scrollbar {
     width: 10px;
-    background-color: transparent;
 }
 
 .chat-messages::-webkit-scrollbar-track {
@@ -67,26 +64,17 @@ body {
     border-radius: 12px;
     margin: 8px 0;
     backdrop-filter: blur(5px);
-    border: 1px solid rgba(108, 99, 255, 0.15);
 }
 
 .chat-messages::-webkit-scrollbar-thumb {
     background: linear-gradient(145deg, #6c63ff, #b388ff);
     border-radius: 12px;
     transition: all 0.25s ease;
-    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .chat-messages::-webkit-scrollbar-thumb:hover {
     background: linear-gradient(145deg, #5a52e0, #a06eff);
-    transform: scale(1.02);
     box-shadow: 0 0 8px #6c63ff;
-}
-
-/* Firefox - برای بخش پیام‌ها */
-.chat-messages {
-    scrollbar-width: thin;
-    scrollbar-color: #6c63ff #2d2d44;
 }
 
 .screen {
@@ -319,6 +307,69 @@ button:hover {
     justify-content: flex-end;
 }
 
+/* استایل پیام صوتی */
+.voice-message {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #3b3b5c;
+    padding: 8px 16px;
+    border-radius: 25px;
+    min-width: 180px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.voice-message:hover {
+    background: #4a4a6e;
+}
+.voice-play-btn {
+    background: none;
+    border: none;
+    font-size: 1.5em;
+    cursor: pointer;
+    padding: 0;
+    margin: 0;
+    width: 32px;
+    color: #fff;
+}
+.voice-play-btn:hover {
+    transform: scale(1.1);
+}
+.voice-wave {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    height: 30px;
+}
+.voice-wave span {
+    width: 3px;
+    background: #fff;
+    border-radius: 3px;
+    animation: none;
+}
+.voice-wave.playing span {
+    animation: voiceWave 0.8s ease infinite alternate;
+}
+.voice-wave span:nth-child(1) { height: 10px; animation-delay: 0s; }
+.voice-wave span:nth-child(2) { height: 18px; animation-delay: 0.2s; }
+.voice-wave span:nth-child(3) { height: 14px; animation-delay: 0.4s; }
+.voice-wave span:nth-child(4) { height: 20px; animation-delay: 0.6s; }
+@keyframes voiceWave {
+    0% { opacity: 0.4; transform: scaleY(0.6); }
+    100% { opacity: 1; transform: scaleY(1.2); }
+}
+.voice-duration {
+    font-size: 0.75rem;
+    color: #ccc;
+    direction: ltr;
+}
+.message.own .voice-message {
+    background: #6c63ff;
+}
+.message.own .voice-wave span {
+    background: #fff;
+}
+
 /* منطقه ورودی */
 .chat-input-area {
     display: flex;
@@ -340,7 +391,7 @@ button:hover {
     color: white;
 }
 
-.emoji-btn, .send-btn {
+.emoji-btn, .voice-btn, .send-btn {
     background: transparent;
     border: none;
     font-size: 1.5em;
@@ -350,6 +401,13 @@ button:hover {
     line-height: 1;
     position: relative;
 }
+.voice-btn {
+    background: #373752;
+    transition: background 0.2s;
+}
+.voice-btn:hover {
+    background: #5a52e0;
+}
 .send-btn {
     background: #6c63ff;
     font-size: 1.3em;
@@ -358,6 +416,75 @@ button:hover {
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+/* نشانگر ضبط صدا */
+.recording-indicator {
+    position: absolute;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #2d2d44;
+    border-radius: 60px;
+    padding: 8px 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    border: 1px solid #6c63ff;
+    backdrop-filter: blur(10px);
+    z-index: 20;
+}
+.recording-indicator.hidden {
+    display: none;
+}
+.recording-wave {
+    display: flex;
+    gap: 3px;
+    align-items: center;
+    height: 30px;
+}
+.recording-wave span {
+    width: 4px;
+    background: #ff6b6b;
+    border-radius: 2px;
+    animation: recordingWave 0.5s ease infinite alternate;
+}
+.recording-wave span:nth-child(1) { height: 12px; animation-delay: 0s; }
+.recording-wave span:nth-child(2) { height: 24px; animation-delay: 0.15s; }
+.recording-wave span:nth-child(3) { height: 18px; animation-delay: 0.3s; }
+.recording-wave span:nth-child(4) { height: 28px; animation-delay: 0.45s; }
+@keyframes recordingWave {
+    0% { transform: scaleY(0.5); }
+    100% { transform: scaleY(1); }
+}
+.recording-time {
+    font-family: monospace;
+    font-size: 1rem;
+    color: #ffb347;
+}
+.cancel-recording, .send-recording {
+    background: #ff6b6b;
+    border: none;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    font-size: 1rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    margin: 0;
+}
+.send-recording {
+    background: #6c63ff;
+}
+.cancel-recording:hover {
+    background: #ff4444;
+}
+.send-recording:hover {
+    background: #5a52e0;
 }
 
 /* پنل اموجی */
@@ -469,7 +596,7 @@ button:hover {
     margin-bottom: 15px;
 }
 
-/* ==================== مودال اختصاصی confirm ==================== */
+/* مودال اختصاصی confirm */
 .custom-confirm {
     display: none;
     position: fixed;
@@ -485,12 +612,10 @@ button:hover {
     opacity: 0;
     transition: opacity 0.3s ease;
 }
-
 .custom-confirm.show {
     display: flex;
     opacity: 1;
 }
-
 .custom-confirm-content {
     background: linear-gradient(145deg, #2d2d44, #25253a);
     padding: 35px 30px;
@@ -502,11 +627,9 @@ button:hover {
     transform: scale(0.8);
     transition: transform 0.3s cubic-bezier(0.34, 1.2, 0.64, 1);
 }
-
 .custom-confirm.show .custom-confirm-content {
     transform: scale(1);
 }
-
 .custom-confirm-message {
     font-size: 1.3rem;
     margin-bottom: 30px;
@@ -515,13 +638,11 @@ button:hover {
     line-height: 1.5;
     word-break: break-word;
 }
-
 .custom-confirm-buttons {
     display: flex;
     gap: 15px;
     justify-content: center;
 }
-
 .confirm-btn {
     flex: 1;
     padding: 12px 0;
@@ -532,30 +653,26 @@ button:hover {
     cursor: pointer;
     transition: all 0.2s ease;
 }
-
 .confirm-yes {
     background: linear-gradient(135deg, #6c63ff, #8b44f0);
     color: white;
     box-shadow: 0 4px 15px rgba(108, 99, 255, 0.3);
 }
-
 .confirm-yes:hover {
     transform: translateY(-2px);
     background: linear-gradient(135deg, #5a52e0, #7a3ad0);
     box-shadow: 0 8px 20px rgba(108, 99, 255, 0.4);
 }
-
 .confirm-no {
     background: #3a3a55;
     color: #ddd;
 }
-
 .confirm-no:hover {
     background: #4a4a6e;
     transform: translateY(-2px);
 }
 
-/* ==================== تولتیپ (جاوااسکریپتی، بدون محدودیت) ==================== */
+/* تولتیپ */
 .custom-tooltip {
     position: fixed;
     background: linear-gradient(135deg, #6c63ff, #9b59b6);
@@ -576,13 +693,11 @@ button:hover {
     pointer-events: none;
     transform: translateY(0);
 }
-
 .custom-tooltip.visible {
     opacity: 1;
     visibility: visible;
     transform: translateY(-4px);
 }
-
 .custom-tooltip::before {
     content: "";
     position: absolute;
@@ -590,18 +705,16 @@ button:hover {
     left: 50%;
     transform: translateX(-50%);
 }
-
 .custom-tooltip.tooltip-top::before {
     bottom: -12px;
     border-top-color: #9b59b6;
 }
-
 .custom-tooltip.tooltip-bottom::before {
     top: -12px;
     border-bottom-color: #9b59b6;
 }
 
-/* ریسپانسیو تولتیپ */
+/* ریسپانسیو */
 @media (max-width: 768px) {
     .custom-tooltip {
         white-space: normal;
@@ -611,8 +724,6 @@ button:hover {
         padding: 5px 10px;
     }
 }
-
-/* رسپانسیو عمومی */
 @media (max-width: 600px) {
     .chat-container {
         height: 100vh;
@@ -634,14 +745,8 @@ button:hover {
     .confirm-btn {
         padding: 10px 0;
     }
-}
-
-/* ریسپانسیو اسکرول بار در موبایل */
-@media (max-width: 768px) {
-    ::-webkit-scrollbar {
-        width: 6px;
-    }
-    .chat-messages::-webkit-scrollbar {
-        width: 8px;
+    .voice-message {
+        min-width: 140px;
+        padding: 6px 12px;
     }
 }
