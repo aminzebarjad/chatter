@@ -60,7 +60,7 @@ function clearToken() {
     localStorage.removeItem('chatter_github_token');
 }
 
-// ==================== رمز چت‌روم (دریافت از فایل password.json) ====================
+// ==================== رمز چت‌روم ====================
 async function getCurrentChatPassword() {
     try {
         const res = await fetch(PASSWORD_RAW_URL);
@@ -73,7 +73,7 @@ async function getCurrentChatPassword() {
     }
 }
 
-// ==================== مودال اختصاصی confirm (جایگزین confirm پیش‌فرض) ====================
+// ==================== مودال اختصاصی confirm ====================
 function customConfirm(message) {
     return new Promise((resolve) => {
         const modal = document.getElementById('customConfirmModal');
@@ -115,7 +115,7 @@ document.getElementById('showGuideBtn').addEventListener('click', () => {
     document.getElementById('guideBox').classList.toggle('visible');
 });
 
-// ==================== خروج (با confirm اختصاصی) ====================
+// ==================== خروج ====================
 document.getElementById('logoutBtn').addEventListener('click', async () => {
     const confirmed = await customConfirm('آیا از خروج مطمئنی؟');
     if (confirmed) {
@@ -129,7 +129,7 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
     }
 });
 
-// ==================== پاک کردن چت (با confirm اختصاصی) ====================
+// ==================== پاک کردن چت ====================
 document.getElementById('clearChatBtn').addEventListener('click', async () => {
     if (currentUsername !== ADMIN_USERNAME) return;
     const confirmed = await customConfirm('آیا از پاک کردن تمام پیام‌ها مطمئنی؟');
@@ -138,7 +138,7 @@ document.getElementById('clearChatBtn').addEventListener('click', async () => {
     }
 });
 
-// ==================== تغییر رمز (مودال) ====================
+// ==================== تغییر رمز ====================
 const modal = document.getElementById('changePasswordModal');
 const closeModal = document.querySelector('.modal-close');
 const changePasswordBtn = document.getElementById('changePasswordBtn');
@@ -358,7 +358,7 @@ async function loadMessages() {
     }
 }
 
-// ==================== ارسال پیام ====================
+// ==================== ارسال پیام متنی ====================
 async function sendMessage() {
     const input = document.getElementById('msgInput');
     const text = input.value.trim();
@@ -368,7 +368,8 @@ async function sendMessage() {
         sender: currentUsername,
         text: text,
         time: Date.now(),
-        avatar: currentAvatar
+        avatar: currentAvatar,
+        type: 'text'
     };
 
     const updated = [...messages, newMsg];
@@ -408,7 +409,55 @@ async function sendMessage() {
     }
 }
 
-// ==================== پاک‌سازی کامل چت (ادمین) ====================
+// ==================== ارسال پیام صوتی ====================
+async function sendVoiceMessage(base64Data, duration) {
+    if (!currentToken || !currentUsername) return;
+
+    const newMsg = {
+        sender: currentUsername,
+        time: Date.now(),
+        avatar: currentAvatar,
+        type: 'voice',
+        data: base64Data,
+        duration: duration
+    };
+
+    const updated = [...messages, newMsg];
+    try {
+        const getRes = await fetch(API_URL, {
+            headers: { 'Authorization': `token ${currentToken}` }
+        });
+        if (!getRes.ok) throw new Error('دریافت فایل ناموفق');
+        const { sha } = await getRes.json();
+
+        const putRes = await fetch(API_URL, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `token ${currentToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                message: `پیام صوتی از ${currentUsername}`,
+                content: utf8ToBase64(JSON.stringify(updated, null, 2)),
+                sha: sha
+            })
+        });
+
+        if (!putRes.ok) {
+            const err = await putRes.json();
+            alert('خطا در ارسال ویس: ' + err.message);
+            return;
+        }
+
+        messages = updated;
+        justSent = true;
+        renderMessages();
+    } catch (e) {
+        alert('مشکل در ارسال پیام صوتی');
+    }
+}
+
+// ==================== پاک‌سازی کامل چت ====================
 async function clearAllMessages() {
     if (!currentToken || currentUsername !== ADMIN_USERNAME) return;
     try {
@@ -444,28 +493,95 @@ async function clearAllMessages() {
     }
 }
 
-// ==================== نمایش پیام‌ها ====================
+// ==================== نمایش پیام‌ها (پشتیبانی از ویس) ====================
 function renderMessages() {
     const container = document.getElementById('messages');
     container.innerHTML = '';
     messages.forEach(msg => {
         const div = document.createElement('div');
         div.className = `message ${msg.sender === currentUsername ? 'own' : ''}`;
+        
         let avatarUrl = msg.avatar;
-        if (!avatarUrl) {
-            avatarUrl = `https://github.com/${msg.sender}.png`;
-        }
+        if (!avatarUrl) avatarUrl = `https://github.com/${msg.sender}.png`;
         const timeStr = formatTime(msg.time);
+        
+        let contentHtml = '';
+        if (msg.type === 'voice' && msg.data) {
+            // پیام صوتی
+            const duration = msg.duration || 0;
+            const minutes = Math.floor(duration / 60);
+            const seconds = Math.floor(duration % 60);
+            const durationText = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            contentHtml = `
+                <div class="voice-message" data-audio="${msg.data}" data-duration="${duration}">
+                    <button class="voice-play-btn">▶️</button>
+                    <div class="voice-wave">
+                        <span></span><span></span><span></span><span></span>
+                    </div>
+                    <span class="voice-duration">${durationText}</span>
+                </div>
+            `;
+        } else {
+            // پیام متنی (سازگاری با پیام‌های قدیمی)
+            const text = msg.text || '';
+            contentHtml = `<span class="text">${escapeHtml(text)}</span>`;
+        }
+        
         div.innerHTML = `
             <div class="msg-header">
                 <img class="sender-avatar" src="${avatarUrl}" alt="">
                 <span class="sender-name">${escapeHtml(msg.sender)}</span>
             </div>
-            <span class="text">${escapeHtml(msg.text)}</span>
+            ${contentHtml}
             <div class="time">${timeStr}</div>
         `;
         container.appendChild(div);
     });
+    
+    // راه‌اندازی رویدادهای پخش صدا
+    document.querySelectorAll('.voice-message').forEach(voiceDiv => {
+        const playBtn = voiceDiv.querySelector('.voice-play-btn');
+        const waveDiv = voiceDiv.querySelector('.voice-wave');
+        const audioData = voiceDiv.getAttribute('data-audio');
+        let audio = null;
+        let isPlaying = false;
+        
+        playBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (audio && !audio.paused) {
+                audio.pause();
+                audio.currentTime = 0;
+                playBtn.textContent = '▶️';
+                waveDiv.classList.remove('playing');
+                isPlaying = false;
+                return;
+            }
+            if (audio) {
+                audio.play();
+                playBtn.textContent = '⏸️';
+                waveDiv.classList.add('playing');
+                isPlaying = true;
+                return;
+            }
+            // ساخت آبجکت صوتی از base64
+            try {
+                audio = new Audio(audioData);
+                audio.addEventListener('ended', () => {
+                    playBtn.textContent = '▶️';
+                    waveDiv.classList.remove('playing');
+                    isPlaying = false;
+                });
+                audio.play();
+                playBtn.textContent = '⏸️';
+                waveDiv.classList.add('playing');
+                isPlaying = true;
+            } catch (err) {
+                console.error('پخش صدا ممکن نیست', err);
+                alert('خطا در پخش صدا');
+            }
+        });
+    });
+    
     container.scrollTop = container.scrollHeight;
 }
 
@@ -486,7 +602,125 @@ function escapeHtml(text) {
     return text.replace(/[&<>"']/g, m => map[m]);
 }
 
-// ==================== پنل اموجی و استیکر ====================
+// ==================== ضبط صدا ====================
+let mediaRecorder = null;
+let audioChunks = [];
+let recordingStartTime = null;
+let recordingTimer = null;
+let recordingStream = null;
+
+const voiceBtn = document.getElementById('voiceBtn');
+const recordingIndicator = document.getElementById('recordingIndicator');
+const recordingTimeSpan = document.querySelector('.recording-time');
+const cancelRecordingBtn = document.getElementById('cancelRecordingBtn');
+const sendRecordingBtn = document.getElementById('sendRecordingBtn');
+
+voiceBtn.addEventListener('click', async () => {
+    if (mediaRecorder && mediaRecorder.state === 'recording') {
+        // در حال ضبط است – متوقف کن
+        stopRecordingAndSend(false);
+        return;
+    }
+    // درخواست دسترسی به میکروفون
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        recordingStream = stream;
+        mediaRecorder = new MediaRecorder(stream);
+        audioChunks = [];
+        
+        mediaRecorder.ondataavailable = (event) => {
+            if (event.data.size > 0) {
+                audioChunks.push(event.data);
+            }
+        };
+        
+        mediaRecorder.onstop = async () => {
+            // توقف ضبط – آماده ارسال
+            const duration = (Date.now() - recordingStartTime) / 1000;
+            if (audioChunks.length === 0 || duration < 0.5) {
+                alert('صدایی ضبط نشد. لطفاً دوباره تلاش کنید.');
+                resetRecording();
+                return;
+            }
+            const blob = new Blob(audioChunks, { type: 'audio/webm' });
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                const base64Audio = reader.result; // data:audio/webm;base64,...
+                sendVoiceMessage(base64Audio, Math.floor(duration));
+                resetRecording();
+            };
+            reader.readAsDataURL(blob);
+        };
+        
+        mediaRecorder.start(100);
+        recordingStartTime = Date.now();
+        recordingIndicator.classList.remove('hidden');
+        startRecordingTimer();
+        
+    } catch (err) {
+        console.error('دسترسی به میکروفون ممکن نیست', err);
+        alert('برای ارسال پیام صوتی باید دسترسی به میکروفون را允许 دهید.');
+    }
+});
+
+function startRecordingTimer() {
+    if (recordingTimer) clearInterval(recordingTimer);
+    recordingTimer = setInterval(() => {
+        if (!recordingStartTime) return;
+        const elapsed = Math.floor((Date.now() - recordingStartTime) / 1000);
+        const minutes = Math.floor(elapsed / 60);
+        const seconds = elapsed % 60;
+        recordingTimeSpan.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        // حداکثر 60 ثانیه
+        if (elapsed >= 60) {
+            stopRecordingAndSend(true);
+        }
+    }, 100);
+}
+
+function stopRecordingAndSend(send = false) {
+    if (mediaRecorder && mediaRecorder.state === 'recording') {
+        mediaRecorder.stop();
+    }
+    if (recordingStream) {
+        recordingStream.getTracks().forEach(track => track.stop());
+        recordingStream = null;
+    }
+    if (recordingTimer) {
+        clearInterval(recordingTimer);
+        recordingTimer = null;
+    }
+    recordingIndicator.classList.add('hidden');
+    if (!send) {
+        // لغو
+        audioChunks = [];
+        recordingStartTime = null;
+    }
+    // برای ارسال، در onstop هندل می‌شود
+}
+
+function resetRecording() {
+    if (recordingStream) {
+        recordingStream.getTracks().forEach(track => track.stop());
+        recordingStream = null;
+    }
+    if (recordingTimer) clearInterval(recordingTimer);
+    recordingIndicator.classList.add('hidden');
+    audioChunks = [];
+    recordingStartTime = null;
+    mediaRecorder = null;
+}
+
+cancelRecordingBtn.addEventListener('click', () => {
+    stopRecordingAndSend(false);
+    resetRecording();
+});
+
+sendRecordingBtn.addEventListener('click', () => {
+    stopRecordingAndSend(true);
+});
+
+// ==================== پنل اموجی ====================
 const emojis = [
     '😀','😂','😍','😎','😢','😡','👍','👎','❤️','🔥',
     '🎉','💔','🤣','🥲','😊','😇','🙂','😴','🤔','😉',
@@ -547,13 +781,13 @@ document.addEventListener('click', (e) => {
     }
 });
 
-// ==================== دکمهٔ ارسال و Enter ====================
+// ==================== دکمه ارسال و Enter ====================
 document.getElementById('sendBtn').addEventListener('click', sendMessage);
 document.getElementById('msgInput').addEventListener('keypress', (e) => {
     if (e.key === 'Enter') sendMessage();
 });
 
-// ==================== سیستم تولتیپ حرفه‌ای (جاوااسکریپتی، بدون مشکل overflow) ====================
+// ==================== تولتیپ ====================
 let activeTooltip = null;
 let tooltipTimeout = null;
 
@@ -568,77 +802,52 @@ function createTooltip(text) {
 function positionTooltip(tooltip, target) {
     const targetRect = target.getBoundingClientRect();
     const tooltipRect = tooltip.getBoundingClientRect();
-    const spacing = 10; // فاصله از المان
-    
+    const spacing = 10;
     let top, left;
-    let direction = 'top'; // پیش‌فرض بالا
-    
-    // محاسبه فضای بالا و پایین
     const spaceTop = targetRect.top - tooltipRect.height - spacing;
     const spaceBottom = window.innerHeight - targetRect.bottom - tooltipRect.height - spacing;
-    
-    // تصمیم‌گیری: اگر فضای بالا بیشتر است یا پایین؟
     if (spaceTop >= 0 && (spaceTop >= spaceBottom)) {
-        // نمایش در بالا
         top = targetRect.top - tooltipRect.height - spacing;
-        direction = 'top';
+        tooltip.classList.add('tooltip-top');
+        tooltip.classList.remove('tooltip-bottom');
     } else if (spaceBottom >= 0) {
-        // نمایش در پایین
         top = targetRect.bottom + spacing;
-        direction = 'bottom';
+        tooltip.classList.add('tooltip-bottom');
+        tooltip.classList.remove('tooltip-top');
     } else {
-        // اگر هیچکدام جا نشد، بالا با افست کمتر
         top = Math.max(5, targetRect.top - tooltipRect.height - 5);
-        direction = 'top';
+        tooltip.classList.add('tooltip-top');
+        tooltip.classList.remove('tooltip-bottom');
     }
-    
-    // تنظیم افقی (وسط نسبت به المان)
     left = targetRect.left + (targetRect.width / 2) - (tooltipRect.width / 2);
-    
-    // جلوگیری از خروج از صفحه در افقی
     if (left < 5) left = 5;
     if (left + tooltipRect.width > window.innerWidth - 5) {
         left = window.innerWidth - tooltipRect.width - 5;
     }
-    
     tooltip.style.top = `${top}px`;
     tooltip.style.left = `${left}px`;
-    
-    // کلاس جهت (برای افکت مثلث در CSS)
-    tooltip.classList.remove('tooltip-top', 'tooltip-bottom');
-    tooltip.classList.add(direction === 'top' ? 'tooltip-top' : 'tooltip-bottom');
 }
 
 function showTooltip(target, text) {
-    if (activeTooltip) {
-        activeTooltip.remove();
-        activeTooltip = null;
-    }
+    if (activeTooltip) activeTooltip.remove();
     if (tooltipTimeout) clearTimeout(tooltipTimeout);
-    
     activeTooltip = createTooltip(text);
     positionTooltip(activeTooltip, target);
-    requestAnimationFrame(() => {
-        activeTooltip.classList.add('visible');
-    });
+    requestAnimationFrame(() => activeTooltip.classList.add('visible'));
 }
 
 function hideTooltip() {
     if (activeTooltip) {
         activeTooltip.classList.remove('visible');
         tooltipTimeout = setTimeout(() => {
-            if (activeTooltip && !activeTooltip.classList.contains('visible')) {
-                activeTooltip.remove();
-                activeTooltip = null;
-            }
+            if (activeTooltip) activeTooltip.remove();
+            activeTooltip = null;
         }, 200);
     }
 }
 
 function initTooltips() {
     const elements = document.querySelectorAll('[data-tooltip]');
-    
-    // برای دسکتاپ (هاور)
     elements.forEach(el => {
         el.addEventListener('mouseenter', () => {
             const text = el.getAttribute('data-tooltip');
@@ -646,26 +855,19 @@ function initTooltips() {
         });
         el.addEventListener('mouseleave', hideTooltip);
     });
-    
-    // برای موبایل/تبلت (لمس)
     let touchTimeout = null;
     elements.forEach(el => {
         el.addEventListener('touchstart', (e) => {
-            e.preventDefault(); // جلوگیری از کلیک همزمان
+            e.preventDefault();
             const text = el.getAttribute('data-tooltip');
             if (!text) return;
-            
-            // اگر تولتیپ فعال است و روی همین المان است، مخفی کن
             if (activeTooltip && activeTooltip._trigger === el) {
                 hideTooltip();
                 return;
             }
-            
-            hideTooltip(); // مخفی کردن قبلی
+            hideTooltip();
             showTooltip(el, text);
             if (activeTooltip) activeTooltip._trigger = el;
-            
-            // بعد از 2 ثانیه مخفی کن
             if (touchTimeout) clearTimeout(touchTimeout);
             touchTimeout = setTimeout(() => {
                 hideTooltip();
@@ -673,15 +875,9 @@ function initTooltips() {
             }, 2000);
         });
     });
-    
-    // مخفی کردن هنگام کلیک روی جای دیگر
     document.addEventListener('click', (e) => {
-        if (!e.target.closest('[data-tooltip]')) {
-            hideTooltip();
-        }
+        if (!e.target.closest('[data-tooltip]')) hideTooltip();
     });
-    
-    // مخفی کردن هنگام اسکرول یا تغییر اندازه صفحه
     window.addEventListener('scroll', hideTooltip);
     window.addEventListener('resize', () => {
         if (activeTooltip && activeTooltip._trigger) {
