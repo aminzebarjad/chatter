@@ -39,7 +39,7 @@
 > _چت‌روم در حال اجرا – صفحه رمز، صفحه توکن و محیط چت_
 
 <div align="center">
-  <img src="https://via.placeholder.com/800x450?text=ChatRoom+Screenshot" alt="screenshot" width="80%">
+  <img src="https://raw.githubusercontent.com/aminzebarjad/chatter/refs/heads/main/assets/IMG_8025.jpeg" alt="screenshot" width="80%">
 </div>
 
 ---
