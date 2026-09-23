@@ -9,10 +9,10 @@ class VoiceManager {
         this.isRecording = false;
         this.shouldSend = false;
         this.onSendCallback = null;
+        this.actualMimeType = 'audio/webm';
 
-        // محدودیت‌ها (هماهنگ با script.js)
-        this.MAX_DURATION = 45;      // حداکثر ۴۵ ثانیه
-        this.BITRATE = 24000;        // 24 kbps
+        this.MAX_DURATION = 45;
+        this.BITRATE = 24000;
 
         this.recordingIndicator = document.getElementById('recordingIndicator');
         this.recordingTimeSpan = document.querySelector('.recording-time');
@@ -47,6 +47,43 @@ class VoiceManager {
         }
     }
 
+    // ✅ اولویت MIME بر اساس پلتفرم
+    getSupportedMimeType() {
+        const ua = navigator.userAgent || '';
+        const isIOS = /iPad|iPhone|iPod/.test(ua) ||
+                      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        const isSafari = /^((?!chrome|android).)*safari/i.test(ua);
+
+        const iosOrder = [
+            'audio/mp4',
+            'audio/mp4;codecs=mp4a.40.2',
+            'audio/aac',
+            'audio/webm;codecs=opus',
+            'audio/webm',
+            'audio/ogg;codecs=opus'
+        ];
+        const desktopOrder = [
+            'audio/webm;codecs=opus',
+            'audio/webm',
+            'audio/ogg;codecs=opus',
+            'audio/mp4',
+            'audio/mpeg'
+        ];
+
+        const order = (isIOS || isSafari) ? iosOrder : desktopOrder;
+
+        for (const type of order) {
+            try {
+                if (MediaRecorder.isTypeSupported(type)) {
+                    console.log('[Voice] Selected MIME:', type);
+                    return type;
+                }
+            } catch (e) { /* skip */ }
+        }
+        console.warn('[Voice] No supported MIME found, using browser default');
+        return '';
+    }
+
     async startRecording() {
         try {
             const stream = await navigator.mediaDevices.getUserMedia({
@@ -58,51 +95,54 @@ class VoiceManager {
             });
             this.stream = stream;
 
-            // انتخاب بهترین MIME type موجود
             const mimeType = this.getSupportedMimeType();
-            const options = { mimeType };
+            const options = {};
+            if (mimeType) options.mimeType = mimeType;
             if (this.BITRATE) options.audioBitsPerSecond = this.BITRATE;
 
             this.mediaRecorder = new MediaRecorder(stream, options);
+
+            // ✅ MIME واقعی رو ذخیره کن (ممکنه با اون چیزی که درخواست کردیم فرق کنه)
+            this.actualMimeType = this.mediaRecorder.mimeType || mimeType || 'audio/webm';
+            console.log('[Voice] Actual MIME:', this.actualMimeType);
+
             this.audioChunks = [];
             this.isRecording = true;
             this.shouldSend = false;
             this.startTime = Date.now();
 
             this.mediaRecorder.ondataavailable = (event) => {
-                if (event.data.size > 0) this.audioChunks.push(event.data);
+                if (event.data && event.data.size > 0) {
+                    this.audioChunks.push(event.data);
+                }
             };
 
             this.mediaRecorder.onstop = () => this.handleStop();
+            this.mediaRecorder.onerror = (e) => {
+                console.error('[Voice] Recorder error:', e);
+                this.isRecording = false;
+            };
+
             this.mediaRecorder.start(100);
             this.startTimer();
             this.showRecordingIndicator(true);
-
-            console.log('[Voice] Recording started, MIME:', mimeType, 'Bitrate:', this.BITRATE);
         } catch (err) {
             console.error('[Voice] Microphone access error:', err);
             alert('برای ارسال پیام صوتی باید دسترسی به میکروفون را اجازه دهید.');
         }
     }
 
-    getSupportedMimeType() {
-        const types = [
-            'audio/webm;codecs=opus',
-            'audio/webm',
-            'audio/ogg;codecs=opus',
-            'audio/mp4',
-            'audio/mpeg'
-        ];
-        for (const type of types) {
-            if (MediaRecorder.isTypeSupported(type)) return type;
-        }
-        return '';
-    }
-
     finishRecording(send = true) {
         if (!this.isRecording || !this.mediaRecorder) return;
         this.shouldSend = send;
-        this.mediaRecorder.stop();
+        try {
+            this.mediaRecorder.stop();
+        } catch (e) {
+            console.error('[Voice] Stop error:', e);
+            this.cleanup();
+            this.showRecordingIndicator(false);
+            this.isRecording = false;
+        }
     }
 
     cancelRecording() {
@@ -114,14 +154,21 @@ class VoiceManager {
         this.cleanup();
 
         if (this.shouldSend && this.audioChunks.length > 0 && duration >= 0.5) {
-            const blob = new Blob(this.audioChunks, { type: 'audio/webm' });
-            console.log('[Voice] Blob size:', (blob.size / 1024).toFixed(1) + ' KB');
+            // ✅ از MIME واقعی استفاده کن، نه هاردکد
+            const blobType = this.actualMimeType || 'audio/webm';
+            const blob = new Blob(this.audioChunks, { type: blobType });
+            console.log('[Voice] Blob:', blobType, '| size:', (blob.size / 1024).toFixed(1) + ' KB');
 
             const reader = new FileReader();
             reader.onloadend = async () => {
                 if (this.onSendCallback) {
-                    await this.onSendCallback(reader.result, Math.floor(duration));
+                    // ✅ MIME رو هم به callback بفرست
+                    await this.onSendCallback(reader.result, Math.floor(duration), blobType);
                 }
+            };
+            reader.onerror = (e) => {
+                console.error('[Voice] FileReader error:', e);
+                alert('خطا در پردازش صدا');
             };
             reader.readAsDataURL(blob);
         } else if (duration < 0.5 && this.shouldSend) {
@@ -159,7 +206,6 @@ class VoiceManager {
             if (this.recordingTimeSpan) {
                 this.recordingTimeSpan.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
             }
-            // توقف خودکار
             if (elapsed >= this.MAX_DURATION) {
                 this.finishRecording(true);
             }
@@ -173,71 +219,94 @@ class VoiceManager {
         }
     }
 
-    // ========== پخش صدا در پیام‌ها ==========
+    // ========== پخش صدا ==========
     static attachVoicePlayers() {
         document.querySelectorAll('.voice-message').forEach(voiceDiv => {
             if (voiceDiv.dataset.voiceHandlerAttached === 'true') return;
             voiceDiv.dataset.voiceHandlerAttached = 'true';
 
             const playBtn = voiceDiv.querySelector('.voice-play-btn');
-            const audioData = voiceDiv.getAttribute('data-audio');
+            if (!playBtn) return;
+
+            // ✅ داده از property عنصر خونده می‌شه، نه از attribute
+            const audioData = voiceDiv._audioData;
+            if (!audioData) {
+                console.warn('[Voice] No audio data on element');
+                return;
+            }
+
             let audio = null;
 
-            playBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-
-                // توقف سایر صداها
+            const stopOther = () => {
                 document.querySelectorAll('.voice-message').forEach(vd => {
                     if (vd === voiceDiv) return;
                     const otherAudio = vd._audioInstance;
                     if (otherAudio && !otherAudio.paused) {
-                        otherAudio.pause();
-                        otherAudio.currentTime = 0;
+                        try {
+                            otherAudio.pause();
+                            otherAudio.currentTime = 0;
+                        } catch (e) { /* ignore */ }
                         vd.classList.remove('playing');
                     }
                 });
+            };
 
-                // اگر همین در حال پخشه، متوقف کن
+            const resetBtn = () => {
+                voiceDiv.classList.remove('playing');
+            };
+
+            playBtn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+
+                stopOther();
+
+                // متوقف کردن اگر در حال پخشه
                 if (audio && !audio.paused) {
-                    audio.pause();
-                    audio.currentTime = 0;
-                    voiceDiv.classList.remove('playing');
+                    try {
+                        audio.pause();
+                        audio.currentTime = 0;
+                    } catch (err) { /* ignore */ }
+                    resetBtn();
                     return;
                 }
 
-                // اگر از قبل ساخته شده، ادامه بده
+                // ادامه پخش قبلی
                 if (audio) {
-                    audio.play();
-                    voiceDiv.classList.add('playing');
+                    try {
+                        await audio.play();
+                        voiceDiv.classList.add('playing');
+                    } catch (err) {
+                        console.error('[Voice] Resume failed:', err);
+                        resetBtn();
+                        alert('خطا در پخش صدا');
+                    }
                     return;
                 }
 
-                // ساخت آبجکت صوتی جدید
+                // ساخت Audio جدید
                 try {
-                    audio = new Audio(audioData);
+                    audio = new Audio();
+                    audio.preload = 'auto';
+                    audio.src = audioData;
                     voiceDiv._audioInstance = audio;
 
                     audio.addEventListener('ended', () => {
-                        voiceDiv.classList.remove('playing');
-                        audio.currentTime = 0;
-                    });
-
-                    audio.addEventListener('pause', () => {
-                        if (audio.currentTime === 0) {
-                            voiceDiv.classList.remove('playing');
-                        }
+                        resetBtn();
+                        try { audio.currentTime = 0; } catch (e) { /* ignore */ }
                     });
 
                     audio.addEventListener('error', (err) => {
-                        console.error('[Voice] Playback error:', err);
-                        voiceDiv.classList.remove('playing');
+                        console.error('[Voice] Audio error:', err, 'src prefix:', audioData.slice(0, 40));
+                        resetBtn();
+                        alert('پخش این پیام صوتی ممکن نیست. لطفاً دوباره ضبط کنید.');
                     });
 
-                    audio.play();
+                    await audio.play();
                     voiceDiv.classList.add('playing');
                 } catch (err) {
-                    console.error('[Voice] Cannot play audio:', err);
-                    alert('خطا در پخش صدا');
+                    console.error('[Voice] Play failed:', err);
+                    resetBtn();
+                    alert('خطا در پخش صدا. لطفاً مطمئن شوید مرورگر از این فرمت پشتیبانی می‌کند.');
                 }
             });
         });
