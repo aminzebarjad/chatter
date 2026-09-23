@@ -138,14 +138,13 @@ class VoiceManager {
         }
     }
 
-    // ========== پخش صدا در پیام‌ها (متد استاتیک) ==========
+    // ========== پخش صدا در پیام‌ها ==========
     static attachVoicePlayers() {
         document.querySelectorAll('.voice-message').forEach(voiceDiv => {
             if (voiceDiv.dataset.voiceHandlerAttached === 'true') return;
             voiceDiv.dataset.voiceHandlerAttached = 'true';
 
             const playBtn = voiceDiv.querySelector('.voice-play-btn');
-            const waveDiv = voiceDiv.querySelector('.voice-wave');
             const audioData = voiceDiv.getAttribute('data-audio');
             let audio = null;
 
@@ -155,44 +154,47 @@ class VoiceManager {
                 // توقف سایر صداهای در حال پخش
                 document.querySelectorAll('.voice-message').forEach(vd => {
                     if (vd === voiceDiv) return;
-                    const otherPlayBtn = vd.querySelector('.voice-play-btn');
-                    const otherWave = vd.querySelector('.voice-wave');
                     const otherAudio = vd._audioInstance;
                     if (otherAudio && !otherAudio.paused) {
                         otherAudio.pause();
                         otherAudio.currentTime = 0;
-                        otherPlayBtn.textContent = '▶️';
-                        otherWave.classList.remove('playing');
+                        vd.classList.remove('playing');
                     }
                 });
 
-                // توقف پخش فعلی
+                // اگر همین دارد پخش می‌شود، متوقف کن
                 if (audio && !audio.paused) {
                     audio.pause();
                     audio.currentTime = 0;
-                    playBtn.textContent = '▶️';
-                    waveDiv.classList.remove('playing');
-                    return;
-                }
-                if (audio) {
-                    audio.play();
-                    playBtn.textContent = '⏸️';
-                    waveDiv.classList.add('playing');
+                    voiceDiv.classList.remove('playing');
                     return;
                 }
 
-                // ایجاد آبجکت صوتی جدید
+                // اگر از قبل ساخته شده، ادامه بده
+                if (audio) {
+                    audio.play();
+                    voiceDiv.classList.add('playing');
+                    return;
+                }
+
+                // ساخت آبجکت صوتی جدید
                 try {
                     audio = new Audio(audioData);
                     voiceDiv._audioInstance = audio;
+
                     audio.addEventListener('ended', () => {
-                        playBtn.textContent = '▶️';
-                        waveDiv.classList.remove('playing');
+                        voiceDiv.classList.remove('playing');
                         audio.currentTime = 0;
                     });
+
+                    audio.addEventListener('pause', () => {
+                        if (audio.currentTime === 0) {
+                            voiceDiv.classList.remove('playing');
+                        }
+                    });
+
                     audio.play();
-                    playBtn.textContent = '⏸️';
-                    waveDiv.classList.add('playing');
+                    voiceDiv.classList.add('playing');
                 } catch (err) {
                     console.error('پخش صدا ممکن نیست', err);
                     alert('خطا در پخش صدا');
@@ -202,5 +204,4 @@ class VoiceManager {
     }
 }
 
-// ایجاد نمونه سراسری
 window.voiceManager = new VoiceManager();
