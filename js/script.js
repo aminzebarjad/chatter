@@ -63,21 +63,13 @@ function playNotificationSound() {
         gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.15);
         oscillator.start(audioCtx.currentTime);
         oscillator.stop(audioCtx.currentTime + 0.15);
-    } catch (e) {
-        // silent
-    }
+    } catch (e) { /* silent */ }
 }
 
 // ==================== LocalStorage ====================
-function saveToken(token) {
-    localStorage.setItem('chatter_github_token', token);
-}
-function getSavedToken() {
-    return localStorage.getItem('chatter_github_token');
-}
-function clearToken() {
-    localStorage.removeItem('chatter_github_token');
-}
+function saveToken(token) { localStorage.setItem('chatter_github_token', token); }
+function getSavedToken() { return localStorage.getItem('chatter_github_token'); }
+function clearToken() { localStorage.removeItem('chatter_github_token'); }
 
 // ==================== رمز چت‌روم ====================
 async function getCurrentChatPassword() {
@@ -103,28 +95,19 @@ function customConfirm(message) {
         messageEl.textContent = message;
         modal.classList.add('show');
 
-        const onYes = () => {
-            modal.classList.remove('show');
-            cleanup();
-            resolve(true);
-        };
-        const onNo = () => {
-            modal.classList.remove('show');
-            cleanup();
-            resolve(false);
-        };
+        const onYes = () => { modal.classList.remove('show'); cleanup(); resolve(true); };
+        const onNo = () => { modal.classList.remove('show'); cleanup(); resolve(false); };
 
         function cleanup() {
             yesBtn.removeEventListener('click', onYes);
             noBtn.removeEventListener('click', onNo);
         }
-
         yesBtn.addEventListener('click', onYes);
         noBtn.addEventListener('click', onNo);
     });
 }
 
-// ==================== المان‌های DOM ====================
+// ==================== DOM ====================
 const passwordScreen = document.getElementById('passwordScreen');
 const tokenScreen = document.getElementById('tokenScreen');
 const chatScreen = document.getElementById('chatScreen');
@@ -153,15 +136,12 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
 document.getElementById('clearChatBtn').addEventListener('click', async () => {
     if (currentUsername !== ADMIN_USERNAME) return;
     const confirmed = await customConfirm('آیا از پاک کردن تمام پیام‌ها مطمئنی؟');
-    if (confirmed) {
-        await clearAllMessages();
-    }
+    if (confirmed) await clearAllMessages();
 });
 
 // ==================== تغییر رمز ====================
 const modal = document.getElementById('changePasswordModal');
 const closeModal = document.querySelector('.modal-close');
-const changePasswordBtn = document.getElementById('changePasswordBtn');
 const submitPasswordChange = document.getElementById('submitPasswordChangeBtn');
 
 function openModal() {
@@ -171,16 +151,11 @@ function openModal() {
     document.getElementById('confirmPasswordInput').value = '';
     document.getElementById('passwordChangeError').textContent = '';
 }
-
-function closeModalFunc() {
-    modal.classList.remove('show');
-}
+function closeModalFunc() { modal.classList.remove('show'); }
 
 closeModal.addEventListener('click', closeModalFunc);
 window.addEventListener('click', (e) => {
-    if (e.target === modal || e.target.hasAttribute('data-close-modal')) {
-        closeModalFunc();
-    }
+    if (e.target === modal || e.target.hasAttribute('data-close-modal')) closeModalFunc();
 });
 
 submitPasswordChange.addEventListener('click', async () => {
@@ -189,39 +164,22 @@ submitPasswordChange.addEventListener('click', async () => {
     const confirmPass = document.getElementById('confirmPasswordInput').value.trim();
     const errorEl = document.getElementById('passwordChangeError');
 
-    if (!oldPass || !newPass || !confirmPass) {
-        errorEl.textContent = 'همه فیلدها را پر کنید';
-        return;
-    }
-    if (newPass !== confirmPass) {
-        errorEl.textContent = 'رمز جدید و تأیید آن مطابقت ندارند';
-        return;
-    }
-    if (newPass.length < 3) {
-        errorEl.textContent = 'رمز جدید حداقل باید ۳ کاراکتر باشد';
-        return;
-    }
+    if (!oldPass || !newPass || !confirmPass) { errorEl.textContent = 'همه فیلدها را پر کنید'; return; }
+    if (newPass !== confirmPass) { errorEl.textContent = 'رمز جدید و تأیید آن مطابقت ندارند'; return; }
+    if (newPass.length < 3) { errorEl.textContent = 'رمز جدید حداقل باید ۳ کاراکتر باشد'; return; }
 
     const currentPass = await getCurrentChatPassword();
-    if (oldPass !== currentPass) {
-        errorEl.textContent = 'رمز فعلی اشتباه است';
-        return;
-    }
+    if (oldPass !== currentPass) { errorEl.textContent = 'رمز فعلی اشتباه است'; return; }
 
     try {
-        const getRes = await fetch(PASSWORD_API_URL, {
-            headers: { 'Authorization': `token ${currentToken}` }
-        });
+        const getRes = await fetch(PASSWORD_API_URL, { headers: { 'Authorization': `token ${currentToken}` } });
         if (!getRes.ok) throw new Error('دریافت فایل رمز ناموفق');
         const { sha } = await getRes.json();
 
         const newContent = { password: newPass };
         const putRes = await fetch(PASSWORD_API_URL, {
             method: 'PUT',
-            headers: {
-                'Authorization': `token ${currentToken}`,
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Authorization': `token ${currentToken}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 message: `تغییر رمز چت‌روم توسط ${currentUsername}`,
                 content: utf8ToBase64(JSON.stringify(newContent, null, 2)),
@@ -234,7 +192,6 @@ submitPasswordChange.addEventListener('click', async () => {
             errorEl.textContent = 'خطا در ذخیره رمز: ' + err.message;
             return;
         }
-
         alert('✅ رمز چت‌روم با موفقیت تغییر کرد');
         closeModalFunc();
     } catch (e) {
@@ -242,7 +199,7 @@ submitPasswordChange.addEventListener('click', async () => {
     }
 });
 
-// ==================== مرحله ۱: رمز عبور ====================
+// ==================== مرحله ۱ ====================
 document.getElementById('checkPasswordBtn').addEventListener('click', handlePassword);
 document.getElementById('roomPassword').addEventListener('keypress', (e) => {
     if (e.key === 'Enter') handlePassword();
@@ -262,31 +219,22 @@ async function handlePassword() {
 
 async function attemptAutoLogin() {
     const savedToken = getSavedToken();
-    if (!savedToken) {
-        switchScreen('token');
-        return;
-    }
+    if (!savedToken) { switchScreen('token'); return; }
     try {
         const res = await fetch('https://api.github.com/user', {
             headers: { 'Authorization': `token ${savedToken}` }
         });
-        if (!res.ok) {
-            clearToken();
-            switchScreen('token');
-            return;
-        }
+        if (!res.ok) { clearToken(); switchScreen('token'); return; }
         const userData = await res.json();
-        currentUsername = userData.loginToken;
+        currentUsername = userData.login;
         currentAvatar = userData.avatar_url;
         currentToken = savedToken;
         switchScreen('chat');
         startChat();
-    } catch (e) {
-        switchScreen('token');
-    }
+    } catch (e) { switchScreen('token'); }
 }
 
-// ==================== مرحله ۲: اتصال توکن ====================
+// ==================== مرحله ۲ ====================
 document.getElementById('connectBtn').addEventListener('click', connectManual);
 document.getElementById('tokenInput').addEventListener('keypress', (e) => {
     if (e.key === 'Enter') connectManual();
@@ -296,19 +244,13 @@ async function connectManual() {
     const tokenInput = document.getElementById('tokenInput');
     const errorEl = document.getElementById('tokenError');
     const token = tokenInput.value.trim();
-    if (!token) {
-        errorEl.textContent = 'توکن را وارد کن';
-        return;
-    }
+    if (!token) { errorEl.textContent = 'توکن را وارد کن'; return; }
     errorEl.textContent = 'در حال بررسی...';
     try {
         const res = await fetch('https://api.github.com/user', {
             headers: { 'Authorization': `token ${token}` }
         });
-        if (!res.ok) {
-            errorEl.textContent = '❌ توکن نامعتبر یا دسترسی ناکافی';
-            return;
-        }
+        if (!res.ok) { errorEl.textContent = '❌ توکن نامعتبر یا دسترسی ناکافی'; return; }
         const userData = await res.json();
         currentUsername = userData.login;
         currentAvatar = userData.avatar_url;
@@ -318,14 +260,10 @@ async function connectManual() {
         errorEl.textContent = '';
         switchScreen('chat');
         startChat();
-   }` } catch (e) {
-        errorEl.textContent = }
- '⚠️ مشکل در اتصال       ';
-    }
+    } catch (e) { errorEl.textContent = '⚠️ مشکل در اتصال'; }
 }
 
-// ==================== });
- جابجایی        بین صفحات ====================
+// ==================== جابجایی صفحات ====================
 function switchScreen(name) {
     passwordScreen.classList.remove('active');
     tokenScreen.classList.remove('active');
@@ -335,7 +273,7 @@ function switchScreen(name) {
     else if (name === 'chat') chatScreen.classList.add('active');
 }
 
-// ==================== شروع محیط چت ====================
+// ==================== شروع چت ====================
 function startChat() {
     const avatarEl = document.getElementById('currentUserAvatar');
     const nameEl = document.getElementById('currentUserName');
@@ -360,7 +298,6 @@ function startChat() {
     if (refreshInterval) clearInterval(refreshInterval);
     refreshInterval = setInterval(loadMessages, 4000);
 
-    // اتصال ماژول صدا به تابع ارسال پیام
     if (window.voiceManager) {
         window.voiceManager.setOnSend(async (base64Audio, duration) => {
             await sendVoiceMessage(base64Audio, duration);
@@ -379,21 +316,15 @@ async function loadMessages() {
         const data = await res.json();
         const content = JSON.parse(base64ToUtf8(data.content));
 
-        if (justSent && content.length < messages.length) {
-            return;
-        }
+        if (justSent && content.length < messages.length) return;
 
         if (JSON.stringify(content) !== JSON.stringify(messages)) {
             const isFirstLoad = messages.length === 0;
             messages = content;
             renderMessages();
             if (!isFirstLoad) playNotificationSound();
-            if (justSent && content.length >= messages.length) {
-                justSent = false;
-            }
-            if (window.VoiceManager) {
-                VoiceManager.attachVoicePlayers();
-            }
+            if (justSent && content.length >= messages.length) justSent = false;
+            if (window.VoiceManager) VoiceManager.attachVoicePlayers();
         }
     } catch (e) {
         console.warn('بارگذاری پیام‌ها با خطا مواجه شد', e);
@@ -424,10 +355,7 @@ async function sendMessage() {
 
         const putRes = await fetch(API_URL, {
             method: 'PUT',
-            headers: {
-                'Authorization': `token ${currentToken}`,
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Authorization': `token ${currentToken}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 message: `پیام از ${currentUsername}`,
                 content: utf8ToBase64(JSON.stringify(updated, null, 2)),
@@ -477,10 +405,7 @@ async function sendVoiceMessage(base64Audio, duration) {
 
         const putRes = await fetch(API_URL, {
             method: 'PUT',
-            headers: {
-                'Authorization': `token ${currentToken}`,
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Authorization': `token ${currentToken}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 message: `پیام صوتی از ${currentUsername}`,
                 content: utf8ToBase64(JSON.stringify(updated, null, 2)),
@@ -493,7 +418,6 @@ async function sendVoiceMessage(base64Audio, duration) {
             alert('خطا در ارسال پیام صوتی: ' + err.message);
             return false;
         }
-
         messages = updated;
         justSent = true;
         renderMessages();
@@ -504,20 +428,19 @@ async function sendVoiceMessage(base64Audio, duration) {
     }
 }
 
-// ==================== پاک‌سازی کامل چت ====================
+// ==================== پاک‌سازی چت ====================
 async function clearAllMessages() {
     if (!currentToken || currentUsername !== ADMIN_USERNAME) return;
     try {
         const getRes = await fetch(API_URL, {
-            headers: { 'Authorization': `token ${current if (!getRes.ok) throw new Error('دریافت فایل ناموفق');
+            headers: { 'Authorization': `token ${currentToken}` }
+        });
+        if (!getRes.ok) throw new Error('دریافت فایل ناموفق');
         const { sha } = await getRes.json();
 
         const putRes = await fetch(API_URL, {
             method: 'PUT',
-            headers: {
-                'Authorization': `token ${currentToken}`,
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Authorization': `token ${currentToken}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 message: 'پاک‌سازی چت توسط ادمین',
                 content: utf8ToBase64('[]'),
@@ -538,6 +461,23 @@ async function clearAllMessages() {
     }
 }
 
+// ==================== آیکون‌های SVG ====================
+const SVG_PLAY = `
+  <svg class="play-icon" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+    <path d="M8 5.14v13.72a1 1 0 0 0 1.5.86l11-6.86a1 1 0 0 0 0-1.72l-11-6.86A1 1 0 0 0 8 5.14z"/>
+  </svg>
+  <svg class="pause-icon" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+    <rect x="6" y="5" width="4" height="14" rx="1.2"/>
+    <rect x="14" y="5" width="4" height="14" rx="1.2"/>
+  </svg>
+`;
+
+const SVG_EMPTY_CHAT = `
+  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#3a3a45" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+  </svg>
+`;
+
 // ==================== نمایش پیام‌ها ====================
 function renderMessages() {
     const container = document.getElementById('messages');
@@ -546,63 +486,71 @@ function renderMessages() {
 
     if (!messages.length) {
         container.innerHTML = `
-          <div class="flex flex-col items-center justify-center h-full text-center select-none">
-            <div class="w-14 h-14 rounded-2xl bg-[#16161c] border border-[#1e1e26] flex items-center justify-center mb-4">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3a3a45" stroke-width="1.5">
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-              </svg>
-            </div>
-            <h3 class="text-sm font-medium text-[#6b6b7a]">شروع گفتگو</h3>
-            <p class="text-xs text-[#3a3a45] mt-1">اولین پیام را ارسال کنید</p>
+          <div class="empty-state">
+            <div class="empty-icon">${SVG_EMPTY_CHAT}</div>
+            <h3 class="text-sm font-semibold text-[#e8e8ed]">شروع گفتگو</h3>
+            <p class="text-xs text-[#6b6b7a] mt-1.5 max-w-[220px] leading-relaxed">اولین پیام را ارسال کنید و گفتگو را آغاز کنید</p>
           </div>`;
         return;
     }
 
+    let lastSender = null;
+    let lastTime = 0;
+
     messages.forEach((msg, index) => {
         const isOwn = msg.sender === currentUsername;
+        const isGrouped = msg.sender === lastSender && (msg.time - lastTime) < 5 * 60 * 1000;
+
         const div = document.createElement('div');
-        div.className = `message flex gap-2.5 ${isOwn ? 'own flex-row-reverse' : ''}`;
-        div.style.animationDelay = `${Math.min(index * 25, 400)}ms`;
+        div.className = `message ${isOwn ? 'own' : ''} ${isGrouped ? 'grouped' : ''}`;
 
         const avatarUrl = msg.avatar || `https://github.com/${msg.sender}.png`;
         const timeStr = formatTime(msg.time);
 
         let contentHtml = '';
+
         if (msg.type === 'voice' && msg.data) {
-            const btnBg = isOwn ? 'bg-[#050507]/15' : 'bg-[#c8ff4d]/15';
-            const iconColor = isOwn ? '#050507' : '#c8ff4d';
             contentHtml = `
-              <div class="voice-message flex items-center gap-2.5 px-3.5 py-2.5 rounded-[18px] ${isOwn ? 'bg-[#c8ff4d] text-[#050507]' : 'bg-[#16161c] border border-[#1e1e26] text-[#e8e8ed]'}" data-audio="${msg.data}">
-                <button class="voice-play-btn w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${btnBg} text-[10px]" style="color: ${iconColor}">▶️</button>
-                <div class="voice-wave flex items-center gap-[3px] h-4"><span></span><span></span><span></span><span></span></div>
-                <span class="text-[11px] opacity-60 font-medium">${msg.duration || 0}s</span>
+              <div class="voice-message" data-audio="${msg.data}">
+                <button class="voice-play-btn" aria-label="پخش">
+                  ${SVG_PLAY}
+                </button>
+                <div class="voice-wave">
+                  <span></span><span></span><span></span><span></span>
+                  <span></span><span></span><span></span><span></span>
+                  <span></span><span></span><span></span><span></span>
+                </div>
+                <span class="voice-time">${msg.duration || 0}s</span>
               </div>`;
         } else {
-            contentHtml = `
-              <div class="bubble px-3.5 py-2.5 text-sm leading-relaxed max-w-[70vw] md:max-w-[420px] break-words">
-                ${escapeHtml(msg.text || '')}
-              </div>`;
+            contentHtml = `<div class="bubble">${escapeHtml(msg.text || '')}</div>`;
         }
 
+        const nameHtml = !isOwn && !isGrouped
+            ? `<span class="msg-name">${escapeHtml(msg.sender || 'User')}</span>`
+            : '';
+
         div.innerHTML = `
-          <img src="${avatarUrl}" class="w-7 h-7 rounded-full shrink-0 mt-0.5 bg-[#16161c] object-cover" alt="">
-          <div class="flex flex-col ${isOwn ? 'items-end' : 'items-start'} min-w-0">
-            <span class="text-[10px] text-[#6b6b7a] mb-1 px-1">${escapeHtml(msg.sender || 'User')}</span>
+          <img src="${avatarUrl}" class="msg-avatar" alt="" loading="lazy">
+          <div class="msg-content">
+            ${nameHtml}
             ${contentHtml}
-            <span class="text-[10px] text-[#3a3a45] mt-1 px-1">${timeStr}</span>
+            <span class="msg-time">${timeStr}</span>
           </div>
         `;
 
         container.appendChild(div);
+        lastSender = msg.sender;
+        lastTime = msg.time;
     });
 
-    // انیمیشن ورود پیام‌ها با Motion One
+    // انیمیشن ورود
     if (window.Motion && typeof window.Motion.animate === 'function') {
         const { animate, stagger } = window.Motion;
         try {
             animate('#messages .message',
-                { opacity: [0, 1], y: [12, 0] },
-                { duration: 0.4, delay: stagger(0.03), easing: [0.16, 1, 0.3, 1] }
+                { opacity: [0, 1], y: [10, 0] },
+                { duration: 0.35, delay: stagger(0.025), easing: [0.16, 1, 0.3, 1] }
             );
         } catch (e) {
             document.querySelectorAll('#messages .message').forEach(el => {
@@ -617,22 +565,21 @@ function renderMessages() {
         });
     }
 
-    container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
+    // اسکرول
+    requestAnimationFrame(() => {
+        container.scrollTop = container.scrollHeight;
+    });
 
-    if (window.VoiceManager) {
-        VoiceManager.attachVoicePlayers();
-    }
+    if (window.VoiceManager) VoiceManager.attachVoicePlayers();
 }
 
-// ==================== پنل اموجی و استیکر ====================
+// ==================== پنل اموجی ====================
 const emojis = [
     '😀','😂','😍','😎','😢','😡','👍','👎','❤️','🔥',
     '🎉','💔','🤣','🥲','😊','😇','🙂','😴','🤔','😉',
     '🌟','⭐','🎈','✨','💯','💤','🕒','📌','📎','💬'
 ];
-const stickers = [
-    '😍','👍','🎉','💔','🤣','🔥','😎','❤️','🥲','⭐'
-];
+const stickers = ['😍','👍','🎉','💔','🤣','🔥','😎','❤️','🥲','⭐'];
 
 const emojiPicker = document.getElementById('emojiPicker');
 const pickerContent = document.getElementById('pickerContent');
@@ -640,9 +587,7 @@ const pickerContent = document.getElementById('pickerContent');
 document.getElementById('emojiBtn').addEventListener('click', (e) => {
     e.stopPropagation();
     emojiPicker.classList.toggle('hidden');
-    if (!emojiPicker.classList.contains('hidden')) {
-        renderPicker(pickerTab);
-    }
+    if (!emojiPicker.classList.contains('hidden')) renderPicker(pickerTab);
 });
 
 document.querySelectorAll('.tab').forEach(tab => {
@@ -691,11 +636,11 @@ document.addEventListener('click', (e) => {
     }
 });
 
-// ==================== دکمه ارسال و Enter ====================
+// ==================== ارسال ====================
 document.getElementById('sendBtn').addEventListener('click', sendMessage);
 document.getElementById('msgInput').addEventListener('keypress', (e) => {
     if (e.key === 'Enter') sendMessage();
 });
 
-// ==================== شروع برنامه ====================
+// ==================== شروع ====================
 switchScreen('password');
