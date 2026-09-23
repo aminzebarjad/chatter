@@ -6,25 +6,25 @@ const API_FILE_PATH = 'chat.json';
 const PASSWORD_FILE_PATH = 'password.json';
 
 // محدودیت‌ها
-const MAX_VOICE_DURATION = 45;       // حداکثر ۴۵ ثانیه
-const VOICE_BITRATE = 24000;         // 24 kbps - کم‌حجم و کافی برای صدا
-const MAX_CHAT_SIZE_WARNING = 900 * 1024; // هشدار در ~۹۰۰ کیلوبایت
+const MAX_VOICE_DURATION = 45;
+const VOICE_BITRATE = 24000;
+const MAX_CHAT_SIZE = 700 * 1024;      // حداکثر حجم chat.json (~۷۰۰KB)
+const MAX_VOICE_SIZE = 80 * 1024;      // حداکثر حجم هر پیام صوتی
 
 const API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${API_FILE_PATH}`;
 const PASSWORD_RAW_URL = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/main/${PASSWORD_FILE_PATH}`;
 const PASSWORD_API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${PASSWORD_FILE_PATH}`;
 
-// ==================== UTF-8 / Base64 (اصلاح‌شده) ====================
-// ✅ پردازش تکه‌تکه برای جلوگیری از سرریز Call Stack
+// ==================== UTF-8 / Base64 (تضمینی) ====================
+// ✅ حلقه ساده، بدون apply، بدون spread، بدون آرگومان‌های زیاد
 function utf8ToBase64(str) {
     const bytes = new TextEncoder().encode(str);
-    let binString = '';
-    const CHUNK = 0x8000; // 32KB
-    for (let i = 0; i < bytes.length; i += CHUNK) {
-        const chunk = bytes.subarray(i, i + CHUNK);
-        binString += String.fromCharCode.apply(null, chunk);
+    const len = bytes.length;
+    let binary = '';
+    for (let i = 0; i < len; i++) {
+        binary += String.fromCharCode(bytes[i]);
     }
-    return btoa(binString);
+    return btoa(binary);
 }
 
 function base64ToUtf8(base64) {
@@ -144,7 +144,7 @@ async function getCurrentChatPassword() {
     return '1234';
 }
 
-// ==================== مودال اختصاصی confirm ====================
+// ==================== مودال confirm ====================
 function customConfirm(message) {
     return new Promise((resolve) => {
         const modal = document.getElementById('customConfirmModal');
@@ -368,7 +368,7 @@ function switchScreen(name) {
 
 // ==================== شروع چت ====================
 function startChat() {
-    const avatarEl = document.getElementById('currentUser (Avatar');
+    const avatarEl = document.getElementById('currentUserAvatar');
     const nameEl = document.getElementById('currentUserName');
     if (avatarEl) avatarEl.src = currentAvatar;
     if (nameEl) nameEl.textContent = currentUsername;
@@ -391,7 +391,7 @@ function startChat() {
     if (refreshInterval) clearInterval(refreshInterval);
     refreshInterval = setInterval(loadMessages, 4000);
 
-    ifwindow.voiceManager) {
+    if (window.voiceManager) {
         window.voiceManager.setOnSend(async (base64Audio, duration) => {
             await sendVoiceMessage(base64Audio, duration);
         });
@@ -447,7 +447,6 @@ async function sendMessage() {
         if (!getRes.ok) throw new Error('دریافت فایل ناموفق');
         const { sha } = await getRes.json();
 
-        // ✅ بدون pretty-print برای صرفه‌جویی در حجم
         const putRes = await fetchWithTimeout(API_URL, {
             method: 'PUT',
             headers: { 'Authorization': `token ${currentToken}`, 'Content-Type': 'application/json' },
@@ -474,19 +473,19 @@ async function sendMessage() {
     }
 }
 
-// ==================== ارسال پیام صوتی (اصلاح‌شده) ====================
+// ==================== ارسال پیام صوتی (محافظت کامل) ====================
 async function sendVoiceMessage(base64Audio, duration) {
     if (!currentToken || !currentUsername) {
         alert('لطفاً ابتدا وارد شوید');
         return false;
     }
 
-    // بررسی حجم
-    const approxSize = base64Audio.length;
-    console.log('[Chatter] Voice size:', formatBytes(approxSize));
+    // حجم خود صدا
+    const voiceSize = base64Audio.length;
+    console.log('[Chatter] Voice size:', formatBytes(voiceSize));
 
-    if (approxSize > 500 * 1024) {
-        alert(`⚠️ حجم صدا خیلی زیاد است (${formatBytes(approxSize)}).\nلطفاً صدای کوتاه‌تری ضبط کنید.`);
+    if (voiceSize > MAX_VOICE_SIZE) {
+        alert(`⚠️ حجم صدا زیاد است (${formatBytes(voiceSize)}).\nلطفاً صدای کوتاه‌تری ضبط کنید (حداکثر ~۳۰ ثانیه).`);
         return false;
     }
 
@@ -501,10 +500,23 @@ async function sendVoiceMessage(base64Audio, duration) {
 
     const updated = [...messages, newMsg];
 
-    // پیش‌بینی حجم کل
-    const predictedSize = JSON.stringify(updated).length;
-    if (predictedSize > 1024 * 1024) {
-        alert(`⚠️ فایل چت دارد پر می‌شود (${formatBytes(predictedSize)}).\nلطفاً چت را پاک کنید یا صدای کوتاه‌تری بفرستید.`);
+    // ✅ پیش‌بینی حجم نهایی chat.json قبل از کدگذاری
+    let predictedSize = 0;
+    try {
+        predictedSize = JSON.stringify(updated).length;
+    } catch (e) {
+        console.error('[Chatter] Failed to stringify messages:', e);
+        alert('⚠️ خطا در آماده‌سازی پیام');
+        return false;
+    }
+
+    console.log('[Chatter] Predicted chat.json size:', formatBytes(predictedSize));
+
+    if (predictedSize > MAX_CHAT_SIZE) {
+        alert(`⚠️ فایل چت پر شده است (${formatBytes(predictedSize)}).\n\n` +
+              `راه‌حل:\n` +
+              `• پیام‌های صوتی قدیمی را پاک کنید\n` +
+              `• یا از دکمه‌ی "پاک کردن چت" در بالا استفاده کنید`);
         return false;
     }
 
@@ -515,15 +527,25 @@ async function sendVoiceMessage(base64Audio, duration) {
         if (!getRes.ok) throw new Error('دریافت فایل ناموفق');
         const { sha } = await getRes.json();
 
+        // ✅ کدگذاری امن (utf8ToBase64 با for loop ساده)
+        let encoded;
+        try {
+            encoded = utf8ToBase64(JSON.stringify(updated));
+        } catch (e) {
+            console.error('[Chatter] Base64 encoding failed:', e);
+            alert('⚠️ حجم چت خیلی زیاد است. لطفاً چت را پاک کنید.');
+            return false;
+        }
+
         const putRes = await fetchWithTimeout(API_URL, {
             method: 'PUT',
             headers: { 'Authorization': `token ${currentToken}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 message: `پیام صوتی از ${currentUsername}`,
-                content: utf8ToBase64(JSON.stringify(updated)),
+                content: encoded,
                 sha: sha
             })
-        }, 20000);
+        }, 25000);
 
         if (!putRes.ok) {
             const err = await putRes.json();
