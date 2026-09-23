@@ -6,75 +6,14 @@
 <title>Chatter — Obsidian Messenger</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/motion@10.18.0/dist/motion.js"></script>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap');
-  
-  * { font-family: 'Geist', sans-serif; }
-  
-  :root {
-    --bg: #050507;
-    --surface: #0f0f13;
-    --elev: #16161c;
-    --border: #1e1e26;
-    --text: #e8e8ed;
-    --muted: #6b6b7a;
-    --accent: #c8ff4d;
-    --accent-dim: #a8d93e;
-  }
-  
-  body { background: var(--bg); color: var(--text); }
-  
-  .screen { display: none; }
-  .screen.active { display: flex; }
-  
-  /* Custom Scrollbar */
-  ::-webkit-scrollbar { width: 4px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: #2a2a35; border-radius: 2px; }
-  
-  /* Message bubbles */
-  .message { opacity: 0; transform: translateY(12px); }
-  .message.visible { opacity: 1; transform: translateY(0); transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
-  
-  .message.own .bubble {
-    background: var(--accent);
-    color: #050507;
-    border-radius: 18px 18px 4px 18px;
-  }
-  
-  .message:not(.own) .bubble {
-    background: var(--elev);
-    border: 1px solid var(--border);
-    border-radius: 18px 18px 18px 4px;
-  }
-  
-  /* Voice message */
-  .voice-wave span {
-    display: inline-block;
-    width: 3px;
-    background: currentColor;
-    border-radius: 2px;
-    margin: 0 1px;
-  }
-  .voice-wave.playing span {
-    animation: wave 0.8s ease-in-out infinite;
-  }
-  .voice-wave span:nth-child(1) { height: 8px; animation-delay: 0s; }
-  .voice-wave span:nth-child(2) { height: 14px; animation-delay: 0.1s; }
-  .voice-wave span:nth-child(3) { height: 10px; animation-delay: 0.2s; }
-  .voice-wave span:nth-child(4) { height: 16px; animation-delay: 0.3s; }
-  
-  @keyframes wave {
-    0%, 100% { transform: scaleY(0.6); }
-    50% { transform: scaleY(1.4); }
-  }
-  
-  .hidden { display: none !important; }
-</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
 </head>
-<body class="min-h-screen flex items-center justify-center p-4">
+<body class="min-h-screen flex items-center justify-center p-4 bg-[#050507] text-[#e8e8ed]">
 
-<!-- ===== PASSWORD SCREEN ===== -->
+<!-- ========== PASSWORD SCREEN ========== -->
 <section id="passwordScreen" class="screen active">
   <div class="w-full max-w-sm">
     <div class="text-center mb-10">
@@ -86,70 +25,69 @@
       <h1 class="text-3xl font-semibold tracking-tight">Chatter</h1>
       <p class="text-[#6b6b7a] text-sm mt-2">ورود به فضای گفتگو</p>
     </div>
-    
+
     <div class="space-y-4">
-      <div class="relative">
-        <input id="roomPassword" type="password" placeholder="رمز اتاق" 
-          class="w-full bg-[#0f0f13] border border-[#1e1e26] rounded-xl px-4 py-3.5 text-sm outline-none focus:border-[#c8ff4d]/50 focus:ring-1 focus:ring-[#c8ff4d]/20 transition-all placeholder:text-[#3a3a45]">
-      </div>
-      <button id="checkPasswordBtn" 
+      <input id="roomPassword" type="password" placeholder="رمز اتاق"
+        class="w-full bg-[#0f0f13] border border-[#1e1e26] rounded-xl px-4 py-3.5 text-sm outline-none focus:border-[#c8ff4d]/50 focus:ring-1 focus:ring-[#c8ff4d]/20 transition-all placeholder:text-[#3a3a45]">
+      <button id="checkPasswordBtn"
         class="w-full bg-[#c8ff4d] text-[#050507] font-semibold py-3.5 rounded-xl hover:bg-[#a8d93e] active:scale-[0.98] transition-all text-sm">
         ورود
       </button>
-      <p id="passwordError" class="text-[#ff6b6b] text-xs text-center"></p>
+      <p id="passwordError" class="text-[#ff6b6b] text-xs text-center min-h-[16px]"></p>
     </div>
   </div>
 </section>
 
-<!-- ===== TOKEN SCREEN ===== -->
+<!-- ========== TOKEN SCREEN ========== -->
 <section id="tokenScreen" class="screen">
   <div class="w-full max-w-sm">
     <div class="text-center mb-10">
       <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[#16161c] border border-[#1e1e26] mb-6">
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#c8ff4d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
         </svg>
       </div>
       <h2 class="text-2xl font-semibold tracking-tight">اتصال GitHub</h2>
       <p class="text-[#6b6b7a] text-sm mt-2">برای همگام‌سازی پیام‌ها توکن خود را وارد کنید</p>
     </div>
-    
+
     <div class="space-y-4">
-      <input id="tokenInput" type="password" placeholder="GitHub Token" 
+      <input id="tokenInput" type="password" placeholder="GitHub Token"
         class="w-full bg-[#0f0f13] border border-[#1e1e26] rounded-xl px-4 py-3.5 text-sm outline-none focus:border-[#c8ff4d]/50 focus:ring-1 focus:ring-[#c8ff4d]/20 transition-all placeholder:text-[#3a3a45]">
-      <button id="connectBtn" 
+      <button id="connectBtn"
         class="w-full bg-[#c8ff4d] text-[#050507] font-semibold py-3.5 rounded-xl hover:bg-[#a8d93e] active:scale-[0.98] transition-all text-sm">
         اتصال
       </button>
-      <p id="tokenError" class="text-[#ff6b6b] text-xs text-center"></p>
-      
-      <button id="showGuideBtn" class="text-[#6b6b7a] text-xs hover:text-[#c8ff4d] transition-colors w-full text-center">
+      <p id="tokenError" class="text-[#ff6b6b] text-xs text-center min-h-[16px]"></p>
+
+      <button id="showGuideBtn" class="text-[#6b6b7a] text-xs hover:text-[#c8ff4d] transition-colors w-full text-center pt-2">
         چگونه توکن بسازم؟
       </button>
-      <div id="guideBox" class="hidden bg-[#0f0f13] border border-[#1e1e26] rounded-xl p-4 text-xs text-[#8b8b9a] leading-relaxed">
+      <div id="guideBox" class="hidden bg-[#0f0f13] border border-[#1e1e26] rounded-xl p-4 text-xs text-[#8b8b9a] leading-relaxed space-y-2">
         <p>۱. به GitHub.com بروید → Settings → Developer settings → Personal access tokens → Tokens (classic)</p>
-        <p class="mt-2">۲. Generate new token → دسترسی <code class="text-[#c8ff4d]">repo</code> را فعال کنید</p>
-        <p class="mt-2">۳. توکن ساخته‌شده را کپی و اینجا وارد کنید</p>
+        <p>۲. Generate new token → دسترسی <code class="text-[#c8ff4d] bg-[#c8ff4d]/10 px-1.5 py-0.5 rounded">repo</code> را فعال کنید</p>
+        <p>۳. توکن ساخته‌شده را کپی و اینجا وارد کنید</p>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ===== CHAT SCREEN ===== -->
+<!-- ========== CHAT SCREEN ========== -->
 <section id="chatScreen" class="screen">
-  <div class="w-full max-w-2xl h-[90vh] flex flex-col rounded-2xl overflow-hidden border border-[#1e1e26] bg-[#0f0f13]">
-    
+  <div class="w-full max-w-2xl h-[92vh] md:h-[90vh] flex flex-col rounded-2xl overflow-hidden border border-[#1e1e26] bg-[#0f0f13]">
+
     <!-- Header -->
-    <header class="flex items-center gap-3 px-5 py-4 border-b border-[#1e1e26] bg-[#0f0f13]">
+    <header class="flex items-center gap-3 px-5 py-4 border-b border-[#1e1e26] bg-[#0f0f13] shrink-0">
       <div class="relative">
-        <img id="currentUserAvatar" src="" alt="" class="w-9 h-9 rounded-full bg-[#16161c]">
+        <img id="currentUserAvatar" src="" alt="" class="w-9 h-9 rounded-full bg-[#16161c] object-cover">
         <span class="absolute -bottom-0.5 -left-0.5 w-3 h-3 bg-[#c8ff4d] rounded-full border-2 border-[#0f0f13]"></span>
       </div>
       <div class="flex-1 min-w-0">
         <p id="currentUserName" class="text-sm font-medium truncate"></p>
         <p class="text-[#6b6b7a] text-[11px]">Private Messenger</p>
       </div>
-      
+
       <div class="flex items-center gap-1">
         <button id="clearChatBtn" class="hidden w-8 h-8 rounded-lg hover:bg-[#1e1e26] flex items-center justify-center transition-colors" title="پاک کردن چت">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6b6b7a" stroke-width="1.5"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6h14z"/></svg>
@@ -162,27 +100,27 @@
         </button>
       </div>
     </header>
-    
+
     <!-- Messages -->
-    <main id="messages" class="flex-1 overflow-y-auto px-5 py-6 space-y-5">
-      <!-- Messages injected here -->
+    <main id="messages" class="flex-1 overflow-y-auto px-4 md:px-5 py-6 space-y-4">
+      <!-- Messages injected by JS -->
     </main>
-    
+
     <!-- Composer -->
-    <div class="px-4 py-3 border-t border-[#1e1e26] bg-[#0f0f13]">
+    <div class="px-3 md:px-4 py-3 border-t border-[#1e1e26] bg-[#0f0f13] shrink-0">
       <div class="flex items-end gap-2">
-        <button id="emojiBtn" class="w-9 h-9 rounded-lg hover:bg-[#1e1e26] flex items-center justify-center shrink-0 transition-colors">
+        <button id="emojiBtn" class="w-9 h-9 rounded-lg hover:bg-[#1e1e26] flex items-center justify-center shrink-0 transition-colors" title="ایموجی">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6b6b7a" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
         </button>
-        
-        <button id="voiceBtn" class="w-9 h-9 rounded-lg hover:bg-[#1e1e26] flex items-center justify-center shrink-0 transition-colors">
+
+        <button id="voiceBtn" class="w-9 h-9 rounded-lg hover:bg-[#1e1e26] flex items-center justify-center shrink-0 transition-colors" title="پیام صوتی">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6b6b7a" stroke-width="1.5"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
         </button>
-        
-        <input id="msgInput" placeholder="پیام خود را بنویسید..." 
+
+        <input id="msgInput" placeholder="پیام خود را بنویسید..."
           class="flex-1 bg-[#16161c] border border-[#1e1e26] rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#c8ff4d]/50 transition-all placeholder:text-[#3a3a45]">
-        
-        <button id="sendBtn" class="w-9 h-9 rounded-lg bg-[#c8ff4d] flex items-center justify-center shrink-0 hover:bg-[#a8d93e] active:scale-95 transition-all">
+
+        <button id="sendBtn" class="w-9 h-9 rounded-lg bg-[#c8ff4d] flex items-center justify-center shrink-0 hover:bg-[#a8d93e] active:scale-95 transition-all" title="ارسال">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#050507" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
         </button>
       </div>
@@ -190,24 +128,66 @@
   </div>
 </section>
 
-<!-- Emoji Picker -->
-<div id="emojiPicker" class="hidden fixed bottom-24 right-6 bg-[#16161c] border border-[#1e1e26] rounded-xl p-3 shadow-2xl z-50 w-64">
+<!-- ========== EMOJI PICKER ========== -->
+<div id="emojiPicker" class="hidden fixed bottom-24 right-6 bg-[#16161c] border border-[#1e1e26] rounded-xl p-3 shadow-2xl z-50 w-72">
   <div class="flex gap-2 mb-3">
-    <button class="tab active text-xs px-2 py-1 rounded bg-[#c8ff4d]/10 text-[#c8ff4d]" data-tab="emojis">ایموجی</button>
-    <button class="tab text-xs px-2 py-1 rounded text-[#6b6b7a] hover:text-[#e8e8ed]" data-tab="stickers">استیکر</button>
+    <button class="tab active text-xs px-2.5 py-1 rounded-md bg-[#c8ff4d]/10 text-[#c8ff4d]" data-tab="emojis">ایموجی</button>
+    <button class="tab text-xs px-2.5 py-1 rounded-md text-[#6b6b7a] hover:text-[#e8e8ed]" data-tab="stickers">استیکر</button>
   </div>
   <div id="pickerContent" class="grid grid-cols-8 gap-1 max-h-40 overflow-y-auto"></div>
 </div>
 
-<!-- Recording Indicator -->
-<div id="recordingIndicator" class="hidden fixed bottom-24 left-1/2 -translate-x-1/2 bg-[#16161c] border border-[#ff4444]/30 rounded-full px-4 py-2 flex items-center gap-3 z-50">
+<!-- ========== RECORDING INDICATOR ========== -->
+<div id="recordingIndicator" class="hidden fixed bottom-24 left-1/2 -translate-x-1/2 bg-[#16161c] border border-[#ff4444]/30 rounded-full px-4 py-2 flex items-center gap-3 z-50 shadow-2xl">
   <span class="w-2 h-2 bg-[#ff4444] rounded-full animate-pulse"></span>
   <span class="text-xs text-[#ff4444] recording-time">0:00</span>
-  <button id="cancelRecordingBtn" class="text-xs text-[#6b6b7a] hover:text-[#e8e8ed]">لغو</button>
-  <button id="sendRecordingBtn" class="text-xs text-[#c8ff4d] hover:text-[#a8d93e]">ارسال</button>
+  <button id="cancelRecordingBtn" class="text-xs text-[#6b6b7a] hover:text-[#e8e8ed] transition-colors">لغو</button>
+  <button id="sendRecordingBtn" class="text-xs text-[#c8ff4d] hover:text-[#a8d93e] transition-colors font-medium">ارسال</button>
 </div>
 
-<script src="voice.js"></script>
-<script src="script.js"></script>
+<!-- ========== CHANGE PASSWORD MODAL ========== -->
+<div id="changePasswordModal" class="modal">
+  <div class="modal-overlay" data-close-modal></div>
+  <div class="modal-content">
+    <div class="flex items-center justify-between mb-5">
+      <h3 class="text-base font-semibold">تغییر رمز اتاق</h3>
+      <span class="modal-close cursor-pointer text-[#6b6b7a] hover:text-[#e8e8ed] text-xl leading-none">&times;</span>
+    </div>
+    <div class="space-y-3">
+      <input id="oldPasswordInput" type="password" placeholder="رمز فعلی"
+        class="w-full bg-[#0f0f13] border border-[#1e1e26] rounded-xl px-4 py-3 text-sm outline-none focus:border-[#c8ff4d]/50 transition-all placeholder:text-[#3a3a45]">
+      <input id="newPasswordInput" type="password" placeholder="رمز جدید"
+        class="w-full bg-[#0f0f13] border border-[#1e1e26] rounded-xl px-4 py-3 text-sm outline-none focus:border-[#c8ff4d]/50 transition-all placeholder:text-[#3a3a45]">
+      <input id="confirmPasswordInput" type="password" placeholder="تأیید رمز جدید"
+        class="w-full bg-[#0f0f13] border border-[#1e1e26] rounded-xl px-4 py-3 text-sm outline-none focus:border-[#c8ff4d]/50 transition-all placeholder:text-[#3a3a45]">
+      <p id="passwordChangeError" class="text-[#ff6b6b] text-xs min-h-[16px]"></p>
+      <button id="submitPasswordChangeBtn"
+        class="w-full bg-[#c8ff4d] text-[#050507] font-semibold py-3 rounded-xl hover:bg-[#a8d93e] active:scale-[0.98] transition-all text-sm">
+        ذخیره
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== CUSTOM CONFIRM MODAL ========== -->
+<div id="customConfirmModal" class="modal">
+  <div class="modal-overlay" data-close-modal></div>
+  <div class="modal-content">
+    <p id="confirmMessage" class="text-sm leading-relaxed mb-5 text-center"></p>
+    <div class="flex gap-2">
+      <button id="confirmYesBtn"
+        class="flex-1 bg-[#c8ff4d] text-[#050507] font-semibold py-2.5 rounded-xl hover:bg-[#a8d93e] active:scale-[0.98] transition-all text-sm">
+        بله
+      </button>
+      <button id="confirmNoBtn"
+        class="flex-1 bg-[#1e1e26] text-[#e8e8ed] font-medium py-2.5 rounded-xl hover:bg-[#2a2a35] active:scale-[0.98] transition-all text-sm">
+        خیر
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="js/voice.js"></script>
+<script src="js/script.js"></script>
 </body>
 </html>
