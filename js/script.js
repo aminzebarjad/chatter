@@ -5,18 +5,16 @@ const ADMIN_USERNAME = 'aminzebarjad';
 const API_FILE_PATH = 'chat.json';
 const PASSWORD_FILE_PATH = 'password.json';
 
-// محدودیت‌ها
 const MAX_VOICE_DURATION = 45;
 const VOICE_BITRATE = 24000;
-const MAX_CHAT_SIZE = 700 * 1024;      // حداکثر حجم chat.json (~۷۰۰KB)
-const MAX_VOICE_SIZE = 80 * 1024;      // حداکثر حجم هر پیام صوتی
+const MAX_CHAT_SIZE = 700 * 1024;
+const MAX_VOICE_SIZE = 100 * 1024;
 
 const API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${API_FILE_PATH}`;
 const PASSWORD_RAW_URL = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/main/${PASSWORD_FILE_PATH}`;
 const PASSWORD_API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${PASSWORD_FILE_PATH}`;
 
-// ==================== UTF-8 / Base64 (تضمینی) ====================
-// ✅ حلقه ساده، بدون apply، بدون spread، بدون آرگومان‌های زیاد
+// ==================== UTF-8 / Base64 ====================
 function utf8ToBase64(str) {
     const bytes = new TextEncoder().encode(str);
     const len = bytes.length;
@@ -391,9 +389,10 @@ function startChat() {
     if (refreshInterval) clearInterval(refreshInterval);
     refreshInterval = setInterval(loadMessages, 4000);
 
+    // ✅ MIME هم از callback دریافت می‌شه
     if (window.voiceManager) {
-        window.voiceManager.setOnSend(async (base64Audio, duration) => {
-            await sendVoiceMessage(base64Audio, duration);
+        window.voiceManager.setOnSend(async (base64Audio, duration, mime) => {
+            await sendVoiceMessage(base64Audio, duration, mime);
         });
     }
 }
@@ -473,19 +472,18 @@ async function sendMessage() {
     }
 }
 
-// ==================== ارسال پیام صوتی (محافظت کامل) ====================
-async function sendVoiceMessage(base64Audio, duration) {
+// ==================== ارسال پیام صوتی ====================
+async function sendVoiceMessage(base64Audio, duration, mime) {
     if (!currentToken || !currentUsername) {
         alert('لطفاً ابتدا وارد شوید');
         return false;
     }
 
-    // حجم خود صدا
     const voiceSize = base64Audio.length;
-    console.log('[Chatter] Voice size:', formatBytes(voiceSize));
+    console.log('[Chatter] Voice size:', formatBytes(voiceSize), '| MIME:', mime);
 
     if (voiceSize > MAX_VOICE_SIZE) {
-        alert(`⚠️ حجم صدا زیاد است (${formatBytes(voiceSize)}).\nلطفاً صدای کوتاه‌تری ضبط کنید (حداکثر ~۳۰ ثانیه).`);
+        alert(`⚠️ حجم صدا زیاد است (${formatBytes(voiceSize)}).\nلطفاً صدای کوتاه‌تری ضبط کنید.`);
         return false;
     }
 
@@ -495,28 +493,28 @@ async function sendVoiceMessage(base64Audio, duration) {
         avatar: currentAvatar,
         type: 'voice',
         data: base64Audio,
-        duration: duration
+        duration: duration,
+        mime: mime || 'audio/webm'  // ✅ ذخیره MIME
     };
 
     const updated = [...messages, newMsg];
 
-    // ✅ پیش‌بینی حجم نهایی chat.json قبل از کدگذاری
     let predictedSize = 0;
     try {
         predictedSize = JSON.stringify(updated).length;
     } catch (e) {
-        console.error('[Chatter] Failed to stringify messages:', e);
+        console.error('[Chatter] Failed to stringify:', e);
         alert('⚠️ خطا در آماده‌سازی پیام');
         return false;
     }
 
-    console.log('[Chatter] Predicted chat.json size:', formatBytes(predictedSize));
+    console.log('[Chatter] Predicted size:', formatBytes(predictedSize));
 
     if (predictedSize > MAX_CHAT_SIZE) {
         alert(`⚠️ فایل چت پر شده است (${formatBytes(predictedSize)}).\n\n` +
               `راه‌حل:\n` +
               `• پیام‌های صوتی قدیمی را پاک کنید\n` +
-              `• یا از دکمه‌ی "پاک کردن چت" در بالا استفاده کنید`);
+              `• یا از دکمه‌ی پاک کردن چت استفاده کنید`);
         return false;
     }
 
@@ -527,12 +525,11 @@ async function sendVoiceMessage(base64Audio, duration) {
         if (!getRes.ok) throw new Error('دریافت فایل ناموفق');
         const { sha } = await getRes.json();
 
-        // ✅ کدگذاری امن (utf8ToBase64 با for loop ساده)
         let encoded;
         try {
             encoded = utf8ToBase64(JSON.stringify(updated));
         } catch (e) {
-            console.error('[Chatter] Base64 encoding failed:', e);
+            console.error('[Chatter] Base64 failed:', e);
             alert('⚠️ حجم چت خیلی زیاد است. لطفاً چت را پاک کنید.');
             return false;
         }
@@ -643,12 +640,14 @@ function renderMessages() {
         const timeStr = formatTime(msg.time);
 
         let contentHtml = '';
+        let voiceData = null;
 
         if (msg.type === 'voice' && msg.data) {
             const dur = Number(msg.duration) || 0;
+            // ✅ بدون data-audio در HTML
             contentHtml = `
-              <div class="voice-message" data-audio="${msg.data}">
-                <button class="voice-play-btn" aria-label="پخش">
+              <div class="voice-message">
+                <button class="voice-play-btn" type="button" aria-label="پخش">
                   ${SVG_PLAY}
                 </button>
                 <div class="voice-wave">
@@ -658,6 +657,7 @@ function renderMessages() {
                 </div>
                 <span class="voice-time">${dur}s</span>
               </div>`;
+            voiceData = msg.data;
         } else {
             contentHtml = `<div class="bubble">${escapeHtml(msg.text || '')}</div>`;
         }
@@ -674,6 +674,12 @@ function renderMessages() {
             <span class="msg-time">${timeStr}</span>
           </div>
         `;
+
+        // ✅ داده صدا رو مستقیم روی عنصر ست کن (بدون HTML attribute)
+        if (voiceData) {
+            const voiceEl = div.querySelector('.voice-message');
+            if (voiceEl) voiceEl._audioData = voiceData;
+        }
 
         container.appendChild(div);
         lastSender = msg.sender;
