@@ -1,5 +1,248 @@
+/* ==================== RESET & BASE ==================== */
+* {
+    box-sizing: border-box;
+    font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Tahoma, sans-serif;
+}
 
-:root{--bg:#08090b;--surface:#111318;--card:#171a21;--elev:#20242d;--text:#f5f7fa;--muted:#8b93a7;--accent:#7cff6b}
-*{box-sizing:border-box}body{margin:0;min-height:100vh;background:var(--bg);color:var(--text);font-family:Inter,Segoe UI,Tahoma,sans-serif;overflow:hidden}.ambient{position:fixed;inset:0;background:radial-gradient(circle at top,var(--accent),transparent 25%);opacity:.05;pointer-events:none}
-.screen{display:none;min-height:100vh;align-items:center;justify-content:center;padding:24px}.screen.active{display:flex;animation:fade .5s ease}.glass-card,.chat-shell{background:var(--surface);border:1px solid #ffffff12;border-radius:28px;box-shadow:0 25px 80px #0008}.auth-card{width:min(420px,100%);padding:40px;text-align:center}.logo-mark svg{width:70px;fill:var(--accent);animation:pulse 3s infinite}.auth-card h1{font-size:42px;margin:15px 0 5px}.auth-card p{color:var(--muted)}input{width:100%;background:#0b0d11;border:1px solid #ffffff18;color:var(--text);padding:16px;border-radius:16px;outline:none;margin:10px 0}button{background:var(--accent);color:#071006;border:0;border-radius:16px;padding:14px 22px;font-weight:700;cursor:pointer;transition:.25s}button:hover{transform:translateY(-2px);filter:brightness(1.1)}.error-text{color:#ff7070!important}.chat-shell{width:min(900px,100%);height:90vh;display:flex;flex-direction:column;overflow:hidden}.chat-header{padding:18px 22px;display:flex;align-items:center;gap:14px;border-bottom:1px solid #ffffff12}.chat-header small{display:block;color:var(--muted)}.chat-header button{margin-right:auto}.avatar-wrap{position:relative}.avatar{width:50px;height:50px;border-radius:50%;display:grid;place-items:center;background:var(--accent);color:#071006;font-size:22px;font-weight:bold}.online{position:absolute;right:0;bottom:2px;width:13px;height:13px;background:#42ff66;border-radius:50%;border:3px solid var(--surface)}.messages{flex:1;padding:25px;overflow:auto}.empty-state{text-align:center;color:var(--muted);animation:float 3s infinite}.empty-state svg{width:110px;fill:none;stroke:var(--accent);stroke-width:4}.composer{padding:18px;display:flex;gap:10px;background:var(--card)}.composer input{margin:0}.hidden{display:none}.modal{display:none}@keyframes fade{from{opacity:0;transform:translateY(15px)}to{opacity:1}}@keyframes pulse{50%{transform:scale(1.05)}}@keyframes float{50%{transform:translateY(-8px)}}
-@media(max-width:600px){.screen{padding:12px}.chat-shell{height:100vh;border-radius:0}.auth-card{padding:28px}.composer{padding-bottom:25px}.chat-header{padding:14px}}
+html, body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background: #050507;
+    color: #e8e8ed;
+    height: 100%;
+}
+
+/* ==================== SCREENS ==================== */
+.screen {
+    display: none;
+    width: 100%;
+    min-height: 100vh;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+}
+
+.screen.active {
+    display: flex;
+}
+
+/* ==================== SCROLLBAR ==================== */
+::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: #2a2a35;
+    border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #3a3a45;
+}
+
+/* ==================== MESSAGES ==================== */
+#messages .message {
+    opacity: 0;
+    transform: translateY(12px);
+}
+
+#messages .message.visible {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Bubble shapes */
+.message.own .bubble {
+    background: #c8ff4d;
+    color: #050507;
+    border-radius: 18px 18px 4px 18px;
+}
+
+.message:not(.own) .bubble {
+    background: #16161c;
+    border: 1px solid #1e1e26;
+    color: #e8e8ed;
+    border-radius: 18px 18px 18px 4px;
+}
+
+/* ==================== VOICE WAVE ==================== */
+.voice-wave span {
+    display: inline-block;
+    width: 3px;
+    background: currentColor;
+    border-radius: 2px;
+    transform-origin: center;
+    transition: transform 0.2s ease;
+}
+
+.voice-wave span:nth-child(1) { height: 8px; }
+.voice-wave span:nth-child(2) { height: 14px; }
+.voice-wave span:nth-child(3) { height: 10px; }
+.voice-wave span:nth-child(4) { height: 16px; }
+
+.voice-wave.playing span {
+    animation: wave 0.8s ease-in-out infinite;
+}
+
+.voice-wave.playing span:nth-child(1) { animation-delay: 0s; }
+.voice-wave.playing span:nth-child(2) { animation-delay: 0.1s; }
+.voice-wave.playing span:nth-child(3) { animation-delay: 0.2s; }
+ff.voice-wave.playing span:nth-child444(4) { animation-delay: 40.3s; }
+
+@keyframes wave {
+    0%, 100% { transform: scaleY(0.5); }
+    50% { transform: scaleY(1.4); }
+}
+
+/* ==================== MODAL ==================== */
+.modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+}
+
+.modal.show {
+    display: flex;
+    animation: modalFade 0.2s ease;
+}
+
+.modal-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(5, 5, 7, 0.75);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+}
+
+.modal-content {
+    position: relative;
+    background: #0f0f13;
+    border: 1px solid #1e1e26;
+    border-radius: 20px;
+    padding: 24px;
+    width: 100%;
+    max-width: 380px;
+    box-shadow: 0 25px 80px rgba(0, 0, 0, 0.6);
+    animation: modalSlide 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalFade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes modalSlide {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.96);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* ==================== EMOJI PICKER ==================== */
+#emojiPicker {
+    animation: pickerSlide 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes pickerSlide {
+    from {
+        opacity: 0;
+        transform: translateY(8px) scale(0.96);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+#pickerContent {
+    scrollbar-width: thin;
+}
+
+.emoji-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    font-size: 20px;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: background 0.15s ease, transform 0.15s ease;
+    user-select: none;
+}
+
+.emoji-item:hover {
+    background: #1e1e26;
+    transform: scale(1.15);
+}
+
+.emoji-item:active {
+    transform: scale(0.95);
+}
+
+/* ==================== VOICE BUTTON STATES ==================== */
+#voiceBtn.recording {
+    background: rgba(255, 68, 68, 0.15);
+}
+
+#voiceBtn.recording svg {
+    stroke: #;
+}
+
+/* ==================== RECORDING INDICATOR ==================== */
+#recordingIndicator {
+    animation: recordingPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes recordingPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255, 68, 68, 0.3); }
+    50% { box-shadow: 0 0 0 8px rgba(255, 68, 68, 0); }
+}
+
+/* ==================== BUTTON FOCUS ==================== */
+button:focus-visible,
+input:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(200, 255, 77, 0.3);
+}
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 640px) {
+    .screen {
+        padding: 0;
+    }
+
+    #chatScreen > div {
+        height: 100vh !important;
+        border-radius: 0 !important;
+        border: none !important;
+        max-width: 100% !important;
+    }
+
+    #emojiPicker {
+        right: 12px;
+        left: 12px;
+        width: auto;
+    }
+}
+
+/* ==================== REDUCED MOTION ==================== */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+    }
+}
