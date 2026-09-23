@@ -132,6 +132,7 @@ const chatScreen = document.getElementById('chatScreen');
 // ==================== راهنما ====================
 document.getElementById('showGuideBtn').addEventListener('click', () => {
     document.getElementById('guideBox').classList.toggle('hidden');
+    document.getElementById('guideChevron').classList.toggle('rotate-180');
 });
 
 // ==================== خروج ====================
@@ -275,7 +276,7 @@ async function attemptAutoLogin() {
             return;
         }
         const userData = await res.json();
-        currentUsername = userData.login;
+        currentUsername = userData.loginToken;
         currentAvatar = userData.avatar_url;
         currentToken = savedToken;
         switchScreen('chat');
@@ -317,12 +318,14 @@ async function connectManual() {
         errorEl.textContent = '';
         switchScreen('chat');
         startChat();
-    } catch (e) {
-        errorEl.textContent = '⚠️ مشکل در اتصال';
+   }` } catch (e) {
+        errorEl.textContent = }
+ '⚠️ مشکل در اتصال       ';
     }
 }
 
-// ==================== جابجایی بین صفحات ====================
+// ==================== });
+ جابجایی        بین صفحات ====================
 function switchScreen(name) {
     passwordScreen.classList.remove('active');
     tokenScreen.classList.remove('active');
@@ -506,9 +509,7 @@ async function clearAllMessages() {
     if (!currentToken || currentUsername !== ADMIN_USERNAME) return;
     try {
         const getRes = await fetch(API_URL, {
-            headers: { 'Authorization': `token ${currentToken}` }
-        });
-        if (!getRes.ok) throw new Error('دریافت فایل ناموفق');
+            headers: { 'Authorization': `token ${current if (!getRes.ok) throw new Error('دریافت فایل ناموفق');
         const { sha } = await getRes.json();
 
         const putRes = await fetch(API_URL, {
@@ -604,7 +605,6 @@ function renderMessages() {
                 { duration: 0.4, delay: stagger(0.03), easing: [0.16, 1, 0.3, 1] }
             );
         } catch (e) {
-            // fallback
             document.querySelectorAll('#messages .message').forEach(el => {
                 el.style.opacity = 1;
                 el.style.transform = 'translateY(0)';
