@@ -1,13 +1,53 @@
+
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chatter — Obsidian Messenger</title><link rel="stylesheet" href="css/style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chatter — Obsidian Messenger</title>
+<link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-<div id="passwordScreen" class="screen active"><div class="card"><h2>🔐 Chatter</h2><p>ورود به فضای گفتگو</p><input id="roomPassword" type="password" placeholder="رمز اتاق"><button id="checkPasswordBtn">ورود</button><p id="passwordError" class="error-text"></p></div></div>
-<div id="tokenScreen" class="screen"><div class="card wide"><h2>🔑 اتصال GitHub</h2><p class="subtitle">برای همگام‌سازی پیام‌ها توکن خود را وارد کنید</p><input id="tokenInput" type="password" placeholder="GitHub Token"><button id="connectBtn">اتصال</button><p id="tokenError" class="error-text"></p></div></div>
-<div id="chatScreen" class="screen"><div class="chat-container"><header class="chat-header"><div><strong>🟢 Chatter</strong><small> Private Messenger</small></div><div><span id="currentUser" class="user-badge"></span><button id="logoutBtn">خروج</button></div></header><main id="messages" class="chat-messages"></main><div class="chat-input-area"><button id="emojiBtn">😊</button><button id="voiceBtn">🎤</button><input id="msgInput" type="text" placeholder="پیام خود را بنویسید..."><button id="sendBtn">➤</button></div></div></div>
-<div id="emojiPicker" class="emoji-picker hidden"></div><div id="recordingIndicator" class="recording-indicator hidden"></div><div id="changePasswordModal" class="modal"></div><div id="customConfirmModal" class="custom-confirm"></div>
+<div class="ambient"></div>
+
+<section id="passwordScreen" class="screen active">
+  <div class="glass-card auth-card">
+    <div class="logo-mark"><svg viewBox="0 0 100 100"><path d="M50 8a42 42 0 1 0 30 72L92 92l-12-12A42 42 0 0 0 50 8z"/></svg></div>
+    <h1>Chatter</h1><p>ورود به فضای گفتگو</p>
+    <input id="roomPassword" type="password" placeholder="رمز اتاق">
+    <button id="checkPasswordBtn">ورود</button>
+    <p id="passwordError" class="error-text"></p>
+  </div>
+</section>
+
+<section id="tokenScreen" class="screen">
+ <div class="glass-card auth-card">
+  <div class="icon-box">🔑</div>
+  <h2>اتصال GitHub</h2>
+  <p>برای همگام‌سازی پیام‌ها توکن خود را وارد کنید</p>
+  <input id="tokenInput" type="password" placeholder="GitHub Token">
+  <button id="connectBtn">اتصال</button>
+  <p id="tokenError" class="error-text"></p>
+ </div>
+</section>
+
+<section id="chatScreen" class="screen">
+ <div class="chat-shell">
+  <header class="chat-header">
+   <div class="avatar-wrap"><div class="avatar">A</div><span class="online"></span></div>
+   <div><strong>Chatter</strong><small>Private Messenger</small></div>
+   <button id="logoutBtn">خروج</button>
+  </header>
+  <main id="messages" class="messages">
+    <div class="empty-state"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="45"/><path d="M35 55h50M45 70h30"/></svg><h3>شروع گفتگو</h3><p>پیامی ارسال کنید و گفتگو را آغاز کنید</p></div>
+  </main>
+  <div class="composer">
+   <button id="emojiBtn">😊</button><button id="voiceBtn">🎤</button>
+   <input id="msgInput" placeholder="پیام خود را بنویسید...">
+   <button id="sendBtn">➤</button>
+  </div>
+ </div>
+</section>
+<div id="emojiPicker" class="hidden"></div><div id="recordingIndicator" class="hidden"></div><div id="changePasswordModal" class="modal"></div><div id="customConfirmModal" class="modal"></div>
 <script src="js/voice.js"></script><script src="js/script.js"></script>
 </body></html>
