@@ -5,20 +5,36 @@ const ADMIN_USERNAME = 'aminzebarjad';
 const API_FILE_PATH = 'chat.json';
 const PASSWORD_FILE_PATH = 'password.json';
 
+// محدودیت‌ها
+const MAX_VOICE_DURATION = 45;       // حداکثر ۴۵ ثانیه
+const VOICE_BITRATE = 24000;         // 24 kbps - کم‌حجم و کافی برای صدا
+const MAX_CHAT_SIZE_WARNING = 900 * 1024; // هشدار در ~۹۰۰ کیلوبایت
+
 const API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${API_FILE_PATH}`;
 const PASSWORD_RAW_URL = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/main/${PASSWORD_FILE_PATH}`;
 const PASSWORD_API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${PASSWORD_FILE_PATH}`;
 
-// ==================== ابزارهای UTF-8 ====================
+// ==================== UTF-8 / Base64 (اصلاح‌شده) ====================
+// ✅ پردازش تکه‌تکه برای جلوگیری از سرریز Call Stack
 function utf8ToBase64(str) {
     const bytes = new TextEncoder().encode(str);
-    const binString = String.fromCharCode(...bytes);
+    let binString = '';
+    const CHUNK = 0x8000; // 32KB
+    for (let i = 0; i < bytes.length; i += CHUNK) {
+        const chunk = bytes.subarray(i, i + CHUNK);
+        binString += String.fromCharCode.apply(null, chunk);
+    }
     return btoa(binString);
 }
 
 function base64ToUtf8(base64) {
-    const binString = atob(base64.replace(/\s/g, ''));
-    const bytes = Uint8Array.from(binString, c => c.charCodeAt(0));
+    const clean = base64.replace(/\s/g, '');
+    const binString = atob(clean);
+    const len = binString.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+        bytes[i] = binString.charCodeAt(i);
+    }
     return new TextDecoder().decode(bytes);
 }
 
@@ -35,6 +51,12 @@ function formatTime(timestamp) {
     const hours = date.getHours().toString().padStart(2, '0');
     const minutes = date.getMinutes().toString().padStart(2, '0');
     return `${hours}:${minutes}`;
+}
+
+function formatBytes(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / 1024 / 1024).toFixed(2) + ' MB';
 }
 
 // ==================== fetch با تایم‌اوت ====================
@@ -85,9 +107,8 @@ function saveToken(token) { localStorage.setItem('chatter_github_token', token);
 function getSavedToken() { return localStorage.getItem('chatter_github_token'); }
 function clearToken() { localStorage.removeItem('chatter_github_token'); }
 
-// ==================== رمز چت‌روم (اصلاح‌شده) ====================
+// ==================== رمز چت‌روم ====================
 async function getCurrentChatPassword() {
-    // 1) تلاش با raw URL (سریع)
     try {
         const res = await fetchWithTimeout(PASSWORD_RAW_URL, {}, 3000);
         if (res.ok) {
@@ -101,7 +122,6 @@ async function getCurrentChatPassword() {
         console.warn('[Chatter] Raw password fetch failed:', e.message);
     }
 
-    // 2) فالبک به GitHub API (معمولاً در ایران قابل دسترس‌تر)
     try {
         const res = await fetchWithTimeout(PASSWORD_API_URL, {
             headers: { 'Accept': 'application/vnd.github.v3+json' }
@@ -120,7 +140,6 @@ async function getCurrentChatPassword() {
         console.warn('[Chatter] API password fetch failed:', e.message);
     }
 
-    // 3) رمز پیش‌فرض
     console.warn('[Chatter] Using default password: 1234');
     return '1234';
 }
@@ -240,7 +259,7 @@ submitPasswordChange.addEventListener('click', async () => {
     }
 });
 
-// ==================== مرحله ۱: رمز عبور (اصلاح‌شده) ====================
+// ==================== مرحله ۱: رمز عبور ====================
 document.getElementById('checkPasswordBtn').addEventListener('click', handlePassword);
 document.getElementById('roomPassword').addEventListener('keypress', (e) => {
     if (e.key === 'Enter') handlePassword();
@@ -251,9 +270,6 @@ async function handlePassword() {
     const errorEl = document.getElementById('passwordError');
     const pass = document.getElementById('roomPassword').value;
 
-    console.log('[Chatter] Login attempt, password length:', pass.length);
-
-    // حالت لودینگ
     btn.disabled = true;
     const originalText = btn.textContent;
     btn.textContent = '...';
@@ -261,8 +277,6 @@ async function handlePassword() {
 
     try {
         const currentPass = await getCurrentChatPassword();
-        console.log('[Chatter] Password check complete');
-
         if (pass === currentPass) {
             errorEl.textContent = '';
             await attemptAutoLogin();
@@ -270,7 +284,6 @@ async function handlePassword() {
             errorEl.textContent = '❌ رمز اشتباه است';
         }
     } catch (e) {
-        console.error('[Chatter] Login error:', e);
         errorEl.textContent = '⚠️ خطا در بررسی رمز';
     } finally {
         btn.disabled = false;
@@ -280,22 +293,13 @@ async function handlePassword() {
 
 async function attemptAutoLogin() {
     const savedToken = getSavedToken();
-    if (!savedToken) {
-        console.log('[Chatter] No saved token, going to token screen');
-        switchScreen('token');
-        return;
-    }
+    if (!savedToken) { switchScreen('token'); return; }
     try {
         const res = await fetchWithTimeout('https://api.github.com/user', {
             headers: { 'Authorization': `token ${savedToken}` }
         }, 5000);
 
-        if (!res.ok) {
-            console.warn('[Chatter] Saved token invalid, clearing');
-            clearToken();
-            switchScreen('token');
-            return;
-        }
+        if (!res.ok) { clearToken(); switchScreen('token'); return; }
         const userData = await res.json();
         currentUsername = userData.login;
         currentAvatar = userData.avatar_url;
@@ -303,7 +307,6 @@ async function attemptAutoLogin() {
         switchScreen('chat');
         startChat();
     } catch (e) {
-        console.warn('[Chatter] Auto-login failed:', e.message);
         switchScreen('token');
     }
 }
@@ -347,7 +350,6 @@ async function connectManual() {
         startChat();
     } catch (e) {
         errorEl.textContent = '⚠️ مشکل در اتصال یا تایم‌اوت';
-        console.error(e);
     } finally {
         btn.disabled = false;
         btn.textContent = originalText;
@@ -366,7 +368,7 @@ function switchScreen(name) {
 
 // ==================== شروع چت ====================
 function startChat() {
-    const avatarEl = document.getElementById('currentUserAvatar');
+    const avatarEl = document.getElementById('currentUser (Avatar');
     const nameEl = document.getElementById('currentUserName');
     if (avatarEl) avatarEl.src = currentAvatar;
     if (nameEl) nameEl.textContent = currentUsername;
@@ -389,7 +391,7 @@ function startChat() {
     if (refreshInterval) clearInterval(refreshInterval);
     refreshInterval = setInterval(loadMessages, 4000);
 
-    if (window.voiceManager) {
+    ifwindow.voiceManager) {
         window.voiceManager.setOnSend(async (base64Audio, duration) => {
             await sendVoiceMessage(base64Audio, duration);
         });
@@ -445,12 +447,13 @@ async function sendMessage() {
         if (!getRes.ok) throw new Error('دریافت فایل ناموفق');
         const { sha } = await getRes.json();
 
+        // ✅ بدون pretty-print برای صرفه‌جویی در حجم
         const putRes = await fetchWithTimeout(API_URL, {
             method: 'PUT',
             headers: { 'Authorization': `token ${currentToken}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 message: `پیام از ${currentUsername}`,
-                content: utf8ToBase64(JSON.stringify(updated, null, 2)),
+                content: utf8ToBase64(JSON.stringify(updated)),
                 sha: sha
             })
         }, 8000);
@@ -471,10 +474,19 @@ async function sendMessage() {
     }
 }
 
-// ==================== ارسال پیام صوتی ====================
+// ==================== ارسال پیام صوتی (اصلاح‌شده) ====================
 async function sendVoiceMessage(base64Audio, duration) {
     if (!currentToken || !currentUsername) {
         alert('لطفاً ابتدا وارد شوید');
+        return false;
+    }
+
+    // بررسی حجم
+    const approxSize = base64Audio.length;
+    console.log('[Chatter] Voice size:', formatBytes(approxSize));
+
+    if (approxSize > 500 * 1024) {
+        alert(`⚠️ حجم صدا خیلی زیاد است (${formatBytes(approxSize)}).\nلطفاً صدای کوتاه‌تری ضبط کنید.`);
         return false;
     }
 
@@ -488,6 +500,14 @@ async function sendVoiceMessage(base64Audio, duration) {
     };
 
     const updated = [...messages, newMsg];
+
+    // پیش‌بینی حجم کل
+    const predictedSize = JSON.stringify(updated).length;
+    if (predictedSize > 1024 * 1024) {
+        alert(`⚠️ فایل چت دارد پر می‌شود (${formatBytes(predictedSize)}).\nلطفاً چت را پاک کنید یا صدای کوتاه‌تری بفرستید.`);
+        return false;
+    }
+
     try {
         const getRes = await fetchWithTimeout(API_URL, {
             headers: { 'Authorization': `token ${currentToken}` }
@@ -500,14 +520,14 @@ async function sendVoiceMessage(base64Audio, duration) {
             headers: { 'Authorization': `token ${currentToken}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 message: `پیام صوتی از ${currentUsername}`,
-                content: utf8ToBase64(JSON.stringify(updated, null, 2)),
+                content: utf8ToBase64(JSON.stringify(updated)),
                 sha: sha
             })
-        }, 15000);
+        }, 20000);
 
         if (!putRes.ok) {
             const err = await putRes.json();
-            alert('خطا در ارسال پیام صوتی: ' + err.message);
+            alert('خطا در ارسال پیام صوتی: ' + (err.message || 'نامشخص'));
             return false;
         }
         messages = updated;
@@ -515,6 +535,7 @@ async function sendVoiceMessage(base64Audio, duration) {
         renderMessages();
         return true;
     } catch (e) {
+        console.error('[Chatter] Voice send error:', e);
         alert('مشکل در ارسال پیام صوتی: ' + e.message);
         return false;
     }
@@ -602,6 +623,7 @@ function renderMessages() {
         let contentHtml = '';
 
         if (msg.type === 'voice' && msg.data) {
+            const dur = Number(msg.duration) || 0;
             contentHtml = `
               <div class="voice-message" data-audio="${msg.data}">
                 <button class="voice-play-btn" aria-label="پخش">
@@ -612,7 +634,7 @@ function renderMessages() {
                   <span></span><span></span><span></span><span></span>
                   <span></span><span></span><span></span><span></span>
                 </div>
-                <span class="voice-time">${msg.duration || 0}s</span>
+                <span class="voice-time">${dur}s</span>
               </div>`;
         } else {
             contentHtml = `<div class="bubble">${escapeHtml(msg.text || '')}</div>`;
