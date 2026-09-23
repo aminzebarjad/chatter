@@ -4,6 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#050507">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Chatter">
+<meta name="mobile-web-app-capable" content="yes">
 <title>Chatter — Obsidian Messenger</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/motion@10.18.0/dist/motion.js"></script>
@@ -30,7 +34,7 @@
 
     <div class="space-y-4">
       <input id="roomPassword" type="password" placeholder="رمز اتاق"
-        class="w-full bg-[#0f0f13] border border-[#1e1e26] rounded-xl px-4 py-3.5 text-sm outline-none focus:border-[#c8ff4d]/50 focus:ring-1 focus:ring-[#c8ff4d]/20 transition-all placeholder:text-[#3a3a45]">
+        class="w-full bg-[#0f0f13] border border-[#1e1e26] rounded-xl px-4 py-3.5 text-base outline-none focus:border-[#c8ff4d]/50 focus:ring-1 focus:ring-[#c8ff4d]/20 transition-all placeholder:text-[#3a3a45]">
       <button id="checkPasswordBtn"
         class="w-full bg-[#c8ff4d] text-[#050507] font-semibold py-3.5 rounded-xl hover:bg-[#a8d93e] active:scale-[0.98] transition-all text-sm">
         ورود
@@ -57,7 +61,7 @@
 
     <div class="space-y-4">
       <input id="tokenInput" type="password" placeholder="GitHub Token"
-        class="w-full bg-[#0f0f13] border border-[#1e1e26] rounded-xl px-4 py-3.5 text-sm outline-none focus:border-[#c8ff4d]/50 focus:ring-1 focus:ring-[#c8ff4d]/20 transition-all placeholder:text-[#3a3a45]">
+        class="w-full bg-[#0f0f13] border border-[#1e1e26] rounded-xl px-4 py-3.5 text-base outline-none focus:border-[#c8ff4d]/50 focus:ring-1 focus:ring-[#c8ff4d]/20 transition-all placeholder:text-[#3a3a45]">
       <button id="connectBtn"
         class="w-full bg-[#c8ff4d] text-[#050507] font-semibold py-3.5 rounded-xl hover:bg-[#a8d93e] active:scale-[0.98] transition-all text-sm">
         اتصال
@@ -157,8 +161,8 @@
       </div>
 
       <div class="flex-1 min-w-0">
-        <p id="currentUserName" class="text-sm font-semibold truncate leading-tight"></p>
-        <p class="text-[#6b6b7a] text-[11px] flex items-center gap-1.5 mt-0.5">
+        <p id="current"UserName" class="text-sm font-semibold truncate leading stroke-tight"></p>
+       -line <p class="text-[#6b6bcap7a] text-[11px]=" flex items-center gap-1.5 mt-0.5">
           <span class="w-1.5 h-1.5 bg-[#c8ff4d] rounded-full animate-pulse"></span>
           <span>Online · Private Messenger</span>
         </p>
@@ -166,7 +170,7 @@
 
       <div class="flex items-center gap-1">
         <button id="clearChatBtn" class="icon-btn hidden" title="پاک کردن چت">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8round" stroke-linejoin="round">
             <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6h14z"/>
             <line x1="10" y1="11" x2="10" y2="17"/>
             <line x1="14" y1="11" x2="14" y2="17"/>
@@ -198,7 +202,7 @@
     <div class="composer">
       <div class="composer-inner">
 
-        <button id="emojiBtn" class="composer-btn" title="ایموجی">
+        <button id="emojiBtn" class="composer-btn" title="ایموجی" type="button">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="10"/>
             <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
@@ -207,7 +211,7 @@
           </svg>
         </button>
 
-        <button id="voiceBtn" class="composer-btn" title="پیام صوتی">
+        <button id="voiceBtn" class="composer-btn" title="پیام صوتی" type="button">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
             <rect x="9" y="2" width="6" height="12" rx="3"/>
             <path d="M5 10v1a7 7 0 0 0 14 0v-1"/>
@@ -217,10 +221,10 @@
         </button>
 
         <div class="composer-input-wrap">
-          <input id="msgInput" type="text" placeholder="پیام خود را بنویسید..." autocomplete="off">
+          <input id="msgInput" type="text" placeholder="پیام خود را بنویسید..." autocomplete="off" autocorrect="off" autocapitalize="sentences" spellcheck="false">
         </div>
 
-        <button id="sendBtn" class="composer-send" title="ارسال">
+        <button id="sendBtn" class="composer-send" title="ارسال" type="button">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <line x1="22" y1="2" x2="11" y2="13"/>
             <polygon points="22 2 15 22 11 13 2 9 22 2" fill="currentColor"/>
@@ -234,8 +238,8 @@
 <!-- ========== EMOJI PICKER ========== -->
 <div id="emojiPicker" class="hidden fixed bottom-24 right-6 bg-[#16161c] border border-[#1e1e26] rounded-xl p-3 shadow-2xl z-50 w-72">
   <div class="flex gap-2 mb-3">
-    <button class="tab active text-xs px-2.5 py-1 rounded-md bg-[#c8ff4d]/10 text-[#c8ff4d]" data-tab="emojis">ایموجی</button>
-    <button class="tab text-xs px-2.5 py-1 rounded-md text-[#6b6b7a] hover:text-[#e8e8ed]" data-tab="stickers">استیکر</button>
+    <button class="tab active text-xs px-2.5 py-1 rounded-md bg-[#c8ff4d]/10 text-[#c8ff4d]" data-tab="emojis" type="button">ایموجی</button>
+    <button class="tab text-xs px-2.5 py-1 rounded-md text-[#6b6b7a] hover:text-[#e8e8ed]" data-tab="stickers" type="button">استیکر</button>
   </div>
   <div id="pickerContent" class="grid grid-cols-8 gap-1 max-h-40 overflow-y-auto"></div>
 </div>
@@ -244,8 +248,8 @@
 <div id="recordingIndicator" class="hidden fixed bottom-24 left-1/2 -translate-x-1/2 bg-[#16161c] border border-[#ff4444]/30 rounded-full px-4 py-2 flex items-center gap-3 z-50 shadow-2xl">
   <span class="w-2 h-2 bg-[#ff4444] rounded-full animate-pulse"></span>
   <span class="text-xs text-[#ff4444] recording-time font-mono">0:00</span>
-  <button id="cancelRecordingBtn" class="text-xs text-[#6b6b7a] hover:text-[#e8e8ed] transition-colors">لغو</button>
-  <button id="sendRecordingBtn" class="text-xs text-[#c8ff4d] hover:text-[#a8d93e] transition-colors font-medium">ارسال</button>
+  <button id="cancelRecordingBtn" class="text-xs text-[#6b6b7a] hover:text-[#e8e8ed] transition-colors" type="button">لغو</button>
+  <button id="sendRecordingBtn" class="text-xs text-[#c8ff4d] hover:text-[#a8d93e] transition-colors font-medium" type="button">ارسال</button>
 </div>
 
 <!-- ========== CHANGE PASSWORD MODAL ========== -->
@@ -258,14 +262,15 @@
     </div>
     <div class="space-y-3">
       <input id="oldPasswordInput" type="password" placeholder="رمز فعلی"
-        class="w-full bg-[#0f0f13] border border-[#1e1e26] rounded-xl px-4 py-3 text-sm outline-none focus:border-[#c8ff4d]/50 transition-all placeholder:text-[#3a3a45]">
+        class="w-full bg-[#0f0f13] border border-[#1e1e26] rounded-xl px-4 py-3 outline-none focus:border-[#c8ff4d]/50 transition-all placeholder:text-[#3a3a45]">
       <input id="newPasswordInput" type="password" placeholder="رمز جدید"
-        class="w-full bg-[#0f0f13] border border-[#1e1e26] rounded-xl px-4 py-3 text-sm outline-none focus:border-[#c8ff4d]/50 transition-all placeholder:text-[#3a3a45]">
+        class="w-full bg-[#0f0f13] border border-[#1e1e26] rounded-xl px-4 py-3 outline-none focus:border-[#c8ff4d]/50 transition-all placeholder:text-[#3a3a45]">
       <input id="confirmPasswordInput" type="password" placeholder="تأیید رمز جدید"
-        class="w-full bg-[#0f0f13] border border-[#1e1e26] rounded-xl px-4 py-3 text-sm outline-none focus:border-[#c8ff4d]/50 transition-all placeholder:text-[#3a3a45]">
+        class="w-full bg-[#0f0f13] border border-[#1e1e26] rounded-xl px-4 py-3 outline-none focus:border-[#c8ff4d]/50 transition-all placeholder:text-[#3a3a45]">
       <p id="passwordChangeError" class="text-[#ff6b6b] text-xs min-h-[16px]"></p>
       <button id="submitPasswordChangeBtn"
-        class="w-full bg-[#c8ff4d] text-[#050507] font-semibold py-3 rounded-xl hover:bg-[#a8d93e] active:scale-[0.98] transition-all text-sm">
+        class="w-full bg-[#c8ff4d] text-[#050507] font-semibold py-3 rounded-xl hover:bg-[#a8d93e] active:scale-[0.98] transition-all text-sm"
+        type="button">
         ذخیره
       </button>
     </div>
@@ -279,11 +284,13 @@
     <p id="confirmMessage" class="text-sm leading-relaxed mb-5 text-center"></p>
     <div class="flex gap-2">
       <button id="confirmYesBtn"
-        class="flex-1 bg-[#c8ff4d] text-[#050507] font-semibold py-2.5 rounded-xl hover:bg-[#a8d93e] active:scale-[0.98] transition-all text-sm">
+        class="flex-1 bg-[#c8ff4d] text-[#050507] font-semibold py-2.5 rounded-xl hover:bg-[#a8d93e] active:scale-[0.98] transition-all text-sm"
+        type="button">
         بله
       </button>
       <button id="confirmNoBtn"
-        class="flex-1 bg-[#1e1e26] text-[#e8e8ed] font-medium py-2.5 rounded-xl hover:bg-[#2a2a35] active:scale-[0.98] transition-all text-sm">
+        class="flex-1 bg-[#1e1e26] text-[#e8e8ed] font-medium py-2.5 rounded-xl hover:bg-[#2a2a35] active:scale-[0.98] transition-all text-sm"
+        type="button">
         خیر
       </button>
     </div>
