@@ -5,6 +5,12 @@
     -webkit-tap-highlight-color: transparent;
 }
 
+html {
+    /* ✅ جلوگیری از زوم iOS */
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+}
+
 html, body {
     margin: 0;
     padding: 0;
@@ -12,14 +18,19 @@ html, body {
     background: #050507;
     color: #e8e8ed;
     height: 100%;
+    width: 100%;
     overscroll-behavior: none;
+    position: fixed;
+    inset: 0;
 }
 
 /* ==================== SCREENS ==================== */
 .screen {
     display: none;
     width: 100%;
+    height: 100%;
     min-height: 100vh;
+    min-height: 100dvh;
     align-items: center;
     justify-content: center;
     padding: 16px;
@@ -50,6 +61,7 @@ html, body {
     width: 100%;
     max-width: 672px;
     height: 92vh;
+    height: 92dvh;
     display: flex;
     flex-direction: column;
     border-radius: 20px;
@@ -58,6 +70,8 @@ html, body {
     background: #0f0f13;
     position: relative;
     box-shadow: 0 25px 80px rgba(0, 0, 0, 0.5);
+    /* ✅ جلوگیری از سرریز از گوشه‌ها */
+    isolation: isolate;
 }
 
 .chat-header {
@@ -84,8 +98,8 @@ html, body {
 
 /* ==================== ICON BUTTON ==================== */
 .icon-btn {
-    width: 34px;
-    height: 34px;
+    width: 36px;
+    height: 36px;
     border-radius: 10px;
     display: flex;
     align-items: center;
@@ -95,6 +109,7 @@ html, body {
     color: #6b6b7a;
     cursor: pointer;
     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    flex-shrink: 0;
 }
 
 .icon-btn:hover {
@@ -117,6 +132,8 @@ html, body {
     flex-direction: column;
     scroll-behavior: smooth;
     position: relative;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
     background:
         radial-gradient(circle at 20% 0%, rgba(200, 255, 77, 0.02), transparent 40%),
         radial-gradient(circle at 80% 100%, rgba(200, 255, 77, 0.015), transparent 40%);
@@ -202,7 +219,7 @@ html, body {
 /* ==================== BUBBLE ==================== */
 .bubble {
     padding: 9px 14px;
-    font-size: 13.5px;
+    font-size: 14px;
     line-height: 1.5;
     word-break: break-word;
     overflow-wrap: anywhere;
@@ -284,8 +301,8 @@ html, body {
 
 /* Play button */
 .voice-play-btn {
-    width: 32px;
-    height: 32px;
+    width: 34px;
+    height: 34px;
     border-radius: 50%;
     border: none;
     cursor: pointer;
@@ -453,11 +470,13 @@ html, body {
 
 /* ==================== COMPOSER ==================== */
 .composer {
-    padding: 10px 12px calc(10px + env(safe-area-inset-bottom, 0px));
+    padding: 10px 12px;
+    padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
     border-top: 1px solid #1e1e26;
     background: #0f0f13;
     flex-shrink: 0;
     position: relative;
+    z-index: 1;
 }
 
 .composer::before {
@@ -477,8 +496,8 @@ html, body {
 }
 
 .composer-btn {
-    width: 38px;
-    height: 38px;
+    width: 40px;
+    height: 40px;
     border-radius: 12px;
     display: flex;
     align-items: center;
@@ -512,17 +531,24 @@ html, body {
     position: relative;
 }
 
+/* ✅ font-size: 16px روی موبایل - جلوگیری از زوم iOS */
 .composer-input-wrap input {
     width: 100%;
     background: #16161c;
     border: 1px solid #1e1e26;
     border-radius: 12px;
     padding: 10px 14px;
-    font-size: 13.5px;
+    font-size: 16px;
+    line-height: 1.4;
     color: #e8e8ed;
     outline: none;
     transition: all 0.2s ease;
-    min-height: 38px;
+    min-height: 40px;
+    /* ✅ جلوگیری از زوم خودکار */
+    -webkit-appearance: none;
+    appearance: none;
+    /* ✅ فونت با اندازه ثابت */
+    font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Tahoma, sans-serif;
 }
 
 .composer-input-wrap input::placeholder {
@@ -536,8 +562,8 @@ html, body {
 }
 
 .composer-send {
-    width: 38px;
-    height: 38px;
+    width: 40px;
+    height: 40px;
     border-radius: 12px;
     background: linear-gradient(135deg, #c8ff4d 0%, #b8ef3d 100%);
     color: #050507;
@@ -596,6 +622,11 @@ html, body {
     animation: modalSlide 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+.modal-content input {
+    /* ✅ ورودی‌های مودال هم 16px */
+    font-size: 16px !important;
+}
+
 @keyframes modalFade {
     from { opacity: 0; }
     to { opacity: 1; }
@@ -624,9 +655,9 @@ html, body {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
-    font-size: 20px;
+    width: 36px;
+    height: 36px;
+    font-size: 22px;
     cursor: pointer;
     border-radius: 8px;
     transition: background 0.15s ease, transform 0.15s ease;
@@ -653,17 +684,139 @@ html, body {
 }
 
 /* ==================== FOCUS VISIBLE ==================== */
-button:focus-visible,
-input:focus-visible {
+button:focus-visible {
     outline: none;
     box-shadow: 0 0 0 2px rgba(200, 255, 77, 0.3);
 }
 
-/* ==================== RESPONSIVE ==================== */
+/* ورودی‌ها focus ring دارن، پس نیازی به outline ندارن */
+input:focus {
+    outline: none;
+}
+
+/* ==================== TOUCH DEVICES ==================== */
+/* ✅ دکمه‌های بزرگ‌تر روی دیوایس‌های لمسی */
+@media (hover: none) and (pointer: coarse) {
+    .icon-btn {
+        width: 40px;
+        height: 40px;
+    }
+
+    .voice-play-btn {
+        width: 38px;
+        height: 38px;
+    }
+
+    .voice-play-btn svg {
+        width: 14px;
+        height: 14px;
+    }
+
+    .composer-btn,
+    .composer-send {
+        width: 42px;
+        height: 42px;
+    }
+}
+
+/* ==================== SMALL MOBILE (iPhone SE, 320px) ==================== */
+@media (max-width: 374px) {
+    .chat-shell {
+        border-radius: 0;
+        border: none;
+        height: 100dvh;
+        max-width: 100%;
+    }
+
+    .screen {
+        padding: 0;
+    }
+
+    .messages {
+        padding: 12px 10px;
+    }
+
+    .msg-avatar {
+        width: 24px;
+        height: 24px;
+    }
+
+    .msg-content {
+        max-width: 85%;
+    }
+
+    .bubble {
+        font-size: 13.5px;
+        padding: 7px 12px;
+    }
+
+    .msg-name {
+        font-size: 10px;
+    }
+
+    .msg-time {
+        font-size: 9.5px;
+    }
+
+    .chat-header {
+        padding: 10px 12px;
+        gap: 8px;
+    }
+
+    .icon-btn {
+        width: 34px;
+        height: 34px;
+    }
+
+    .composer {
+        padding: 8px 8px calc(8px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .composer-inner {
+        gap: 4px;
+    }
+
+    .composer-btn,
+    .composer-send {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+    }
+
+    .composer-input-wrap input {
+        padding: 9px 11px;
+        font-size: 16px;
+        min-height: 36px;
+        border-radius: 10px;
+    }
+
+    .voice-message {
+        min-width: 140px;
+        padding: 6px 10px 6px 8px;
+        gap: 8px;
+    }
+
+    .voice-play-btn {
+        width: 32px;
+        height: 32px;
+    }
+
+    .voice-play-btn svg {
+        width: 12px;
+        height: 12px;
+    }
+
+    .voice-time {
+        font-size: 10px;
+    }
+}
+
+/* ==================== MOBILE (عمومی، تا 640px) ==================== */
 @media (max-width: 640px) {
     .screen {
         padding: 0;
         min-height: 100dvh;
+        height: 100dvh;
     }
 
     .chat-shell {
@@ -671,6 +824,7 @@ input:focus-visible {
         max-width: 100%;
         border-radius: 0;
         border: none;
+        box-shadow: none;
     }
 
     .messages {
@@ -687,11 +841,9 @@ input:focus-visible {
     }
 
     .bubble {
-        font-size: 13.5px;
-        padding: 8px 13px;
+        font-size: 14.5px;
     }
 
-    /* ✅ دکمه پخش صدا بزرگ‌تر برای لمس راحت‌تر */
     .voice-message {
         min-width: 160px;
     }
@@ -706,21 +858,52 @@ input:focus-visible {
         height: 14px;
     }
 
-    .voice-wave {
-        gap: 2px;
-        height: 22px;
+    .composer {
+        padding: 10px 10px calc(10px + env(safe-area-inset-bottom, 0px));
     }
 
-    .voice-wave span {
-        width: 2.5px;
+    .composer-btn,
+    .composer-send {
+        width: 40px;
+        height: 40px;
     }
 
-    .voice-time {
-        font-size: 11.5px;
+    .composer-input-wrap input {
+        font-size: 16px;
+        padding: 10px 12px;
+        min-height: 40px;
+    }
+
+    #emojiPicker {
+        right: 12px;
+        left: 12px;
+        width: auto;
+        bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+    }
+}
+
+/* ==================== LANDSCAPE MOBILE ==================== */
+@media (max-height: 500px) and (orientation: landscape) {
+    .chat-shell {
+        height: 100dvh;
+        border-radius: 0;
+        border: none;
+    }
+
+    .chat-header {
+        padding: 8px 14px;
+    }
+
+    .messages {
+        padding: 12px 16px;
+    }
+
+    .msg-content {
+        max-width: 60%;
     }
 
     .composer {
-        padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px));
+        padding: 6px 10px;
     }
 
     .composer-btn,
@@ -730,19 +913,48 @@ input:focus-visible {
     }
 
     .composer-input-wrap input {
-        padding: 9px 12px;
-        font-size: 14px;
         min-height: 36px;
+        padding: 8px 12px;
+        font-size: 16px;
     }
 
     #emojiPicker {
-        right: 12px;
-        left: 12px;
-        width: auto;
+        bottom: 60px;
+        max-height: 180px;
+    }
+
+    #pickerContent {
+        max-height: 120px;
     }
 }
 
-@media (min-width: 641px) {
+/* ==================== TABLET ==================== */
+@media (min-width: 641px) and (max-width: 1023px) {
+    .chat-shell {
+        max-width: 640px;
+        height: 90dvh;
+    }
+
+    .msg-avatar {
+        width: 30px;
+        height: 30px;
+    }
+
+    .msg-content {
+        max-width: 72%;
+    }
+
+    .bubble {
+        font-size: 14.5px;
+    }
+
+    .composer-input-wrap input {
+        font-size: 16px;
+    }
+}
+
+/* ==================== DESKTOP ==================== */
+@media (min-width: 1024px) {
     .msg-avatar {
         width: 32px;
         height: 32px;
@@ -761,9 +973,254 @@ input:focus-visible {
     }
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 1280px) {
+    .chat-shell {
+        max-width: 720px;
+    }
+
     .msg-content {
         max-width: 460px;
+    }
+
+    .messages {
+        padding: 28px 24px;
+    }
+
+    .bubble {
+        font-size: 14.5px;
+        padding: 10px 15px;
+    }
+}
+
+/* ==================== LARGE DESKTOP / 2K ==================== */
+@media (min-width: 1920px) {
+    .chat-shell {
+        max-width: 820px;
+    }
+
+    .chat-header {
+        padding: 16px 22px;
+    }
+
+    .messages {
+        padding: 32px 28px;
+    }
+
+    .msg-avatar {
+        width: 36px;
+        height: 36px;
+    }
+
+    .msg-content {
+        max-width: 520px;
+    }
+
+    .bubble {
+        font-size: 15px;
+        padding: 11px 17px;
+        line-height: 1.55;
+    }
+
+    .msg-name {
+        font-size: 11.5px;
+    }
+
+    .msg-time {
+        font-size: 11px;
+    }
+
+    .composer {
+        padding: 14px 18px;
+    }
+
+    .composer-btn,
+    .composer-send {
+        width: 44px;
+        height: 44px;
+        border-radius: 14px;
+    }
+
+    .composer-input-wrap input {
+        font-size: 16px;
+        padding: 12px 16px;
+        min-height: 44px;
+        border-radius: 14px;
+    }
+
+    .voice-message {
+        min-width: 220px;
+        padding: 10px 18px 10px 14px;
+    }
+
+    .voice-play-btn {
+        width: 40px;
+        height: 40px;
+    }
+
+    .voice-play-btn svg {
+        width: 15px;
+        height: 15px;
+    }
+
+    .voice-time {
+        font-size: 12px;
+    }
+
+    .icon-btn {
+        width: 40px;
+        height: 40px;
+    }
+}
+
+/* ==================== 4K / TV ==================== */
+@media (min-width: 2560px) {
+    .chat-shell {
+        max-width: 1000px;
+        border-radius: 28px;
+    }
+
+    .chat-header {
+        padding: 20px 28px;
+        gap: 16px;
+    }
+
+    .chat-header img {
+        width: 48px !important;
+        height: 48px !important;
+    }
+
+    .messages {
+        padding: 40px 36px;
+    }
+
+    .msg-avatar {
+        width: 44px;
+        height: 44px;
+    }
+
+    .msg-content {
+        max-width: 640px;
+    }
+
+    .bubble {
+        font-size: 18px;
+        padding: 14px 22px;
+        line-height: 1.6;
+        border-radius: 22px 22px 6px 22px;
+    }
+
+    .message:not(.own) .bubble {
+        border-radius: 22px 22px 22px 6px;
+    }
+
+    .msg-name {
+        font-size: 14px;
+    }
+
+    .msg-time {
+        font-size: 13px;
+    }
+
+    .composer {
+        padding: 20px 24px;
+    }
+
+    .composer-btn,
+    .composer-send {
+        width: 56px;
+        height: 56px;
+        border-radius: 16px;
+    }
+
+    .composer-btn svg,
+    .composer-send svg {
+        width: 24px;
+        height: 24px;
+    }
+
+    .composer-input-wrap input {
+        font-size: 18px;
+        padding: 16px 22px;
+        min-height: 56px;
+        border-radius: 16px;
+    }
+
+    .voice-message {
+        min-width: 280px;
+        padding: 12px 24px 12px 18px;
+        gap: 14px;
+    }
+
+    .voice-play-btn {
+        width: 48px;
+        height: 48px;
+    }
+
+    .voice-play-btn svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    .voice-wave span {
+        width: 3.5px;
+    }
+
+    .voice-time {
+        font-size: 15px;
+    }
+
+    .icon-btn {
+        width: 52px;
+        height: 52px;
+    }
+
+    .icon-btn svg {
+        width: 22px;
+        height: 22px;
+    }
+}
+
+/* ==================== TV و صفحه‌های فوق‌العاده بزرگ ==================== */
+/* ✅ برای تلویزیون - از فاصله دور خونده می‌شه */
+@media (min-width: 3200px) {
+    .chat-shell {
+        max-width: 1400px;
+        border-radius: 36px;
+    }
+
+    .chat-header {
+        padding: 28px 40px;
+    }
+
+    .messages {
+        padding: 56px 48px;
+    }
+
+    .bubble {
+        font-size: 22px;
+        padding: 18px 28px;
+        line-height: 1.65;
+    }
+
+    .msg-content {
+        max-width: 900px;
+    }
+
+    .msg-avatar {
+        width: 56px;
+        height: 56px;
+    }
+
+    .composer-input-wrap input {
+        font-size: 22px;
+        padding: 20px 28px;
+        min-height: 72px;
+    }
+
+    .composer-btn,
+    .composer-send {
+        width: 72px;
+        height: 72px;
     }
 }
 
@@ -772,5 +1229,20 @@ input:focus-visible {
     *, *::before, *::after {
         animation-duration: 0.01ms !important;
         transition-duration: 0.01ms !important;
+    }
+}
+
+/* ==================== DARK MODE ==================== */
+/* ✅ خود اپ دارک هست، پس نیازی به override نیست */
+
+/* ==================== PRINT ==================== */
+@media print {
+    body {
+        background: #fff;
+        color: #000;
+    }
+    .composer,
+    .chat-header button {
+        display: none;
     }
 }
