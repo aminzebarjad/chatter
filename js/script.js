@@ -17,7 +17,7 @@ function utf8ToBase64(str) {
 }
 
 function base64ToUtf8(base64) {
-    const binString = atob(base64);
+    const binString = atob(base64.replace(/\s/g, ''));
     const bytes = Uint8Array.from(binString, c => c.charCodeAt(0));
     return new TextDecoder().decode(bytes);
 }
@@ -35,6 +35,20 @@ function formatTime(timestamp) {
     const hours = date.getHours().toString().padStart(2, '0');
     const minutes = date.getMinutes().toString().padStart(2, '0');
     return `${hours}:${minutes}`;
+}
+
+// ==================== fetch با تایم‌اوت ====================
+async function fetchWithTimeout(url, options = {}, timeout = 3000) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeout);
+    try {
+        const response = await fetch(url, { ...options, signal: controller.signal });
+        clearTimeout(timer);
+        return response;
+    } catch (e) {
+        clearTimeout(timer);
+        throw e;
+    }
 }
 
 // ==================== وضعیت برنامه ====================
@@ -71,17 +85,44 @@ function saveToken(token) { localStorage.setItem('chatter_github_token', token);
 function getSavedToken() { return localStorage.getItem('chatter_github_token'); }
 function clearToken() { localStorage.removeItem('chatter_github_token'); }
 
-// ==================== رمز چت‌روم ====================
+// ==================== رمز چت‌روم (اصلاح‌شده) ====================
 async function getCurrentChatPassword() {
+    // 1) تلاش با raw URL (سریع)
     try {
-        const res = await fetch(PASSWORD_RAW_URL);
-        if (!res.ok) throw new Error('فایل رمز یافت نشد');
-        const data = await res.json();
-        return data.password;
+        const res = await fetchWithTimeout(PASSWORD_RAW_URL, {}, 3000);
+        if (res.ok) {
+            const data = await res.json();
+            if (data && data.password) {
+                console.log('[Chatter] Password loaded from raw URL');
+                return String(data.password);
+            }
+        }
     } catch (e) {
-        console.warn('خطا در دریافت رمز، استفاده از رمز پیش‌فرض 1234', e);
-        return '1234';
+        console.warn('[Chatter] Raw password fetch failed:', e.message);
     }
+
+    // 2) فالبک به GitHub API (معمولاً در ایران قابل دسترس‌تر)
+    try {
+        const res = await fetchWithTimeout(PASSWORD_API_URL, {
+            headers: { 'Accept': 'application/vnd.github.v3+json' }
+        }, 3000);
+        if (res.ok) {
+            const data = await res.json();
+            if (data && data.content) {
+                const decoded = JSON.parse(base64ToUtf8(data.content));
+                if (decoded && decoded.password) {
+                    console.log('[Chatter] Password loaded from API fallback');
+                    return String(decoded.password);
+                }
+            }
+        }
+    } catch (e) {
+        console.warn('[Chatter] API password fetch failed:', e.message);
+    }
+
+    // 3) رمز پیش‌فرض
+    console.warn('[Chatter] Using default password: 1234');
+    return '1234';
 }
 
 // ==================== مودال اختصاصی confirm ====================
@@ -199,42 +240,75 @@ submitPasswordChange.addEventListener('click', async () => {
     }
 });
 
-// ==================== مرحله ۱ ====================
+// ==================== مرحله ۱: رمز عبور (اصلاح‌شده) ====================
 document.getElementById('checkPasswordBtn').addEventListener('click', handlePassword);
 document.getElementById('roomPassword').addEventListener('keypress', (e) => {
     if (e.key === 'Enter') handlePassword();
 });
 
 async function handlePassword() {
-    const pass = document.getElementById('roomPassword').value;
+    const btn = document.getElementById('checkPasswordBtn');
     const errorEl = document.getElementById('passwordError');
-    const currentPass = await getCurrentChatPassword();
-    if (pass === currentPass) {
-        errorEl.textContent = '';
-        attemptAutoLogin();
-    } else {
-        errorEl.textContent = '❌ رمز اشتباه است';
+    const pass = document.getElementById('roomPassword').value;
+
+    console.log('[Chatter] Login attempt, password length:', pass.length);
+
+    // حالت لودینگ
+    btn.disabled = true;
+    const originalText = btn.textContent;
+    btn.textContent = '...';
+    errorEl.textContent = '';
+
+    try {
+        const currentPass = await getCurrentChatPassword();
+        console.log('[Chatter] Password check complete');
+
+        if (pass === currentPass) {
+            errorEl.textContent = '';
+            await attemptAutoLogin();
+        } else {
+            errorEl.textContent = '❌ رمز اشتباه است';
+        }
+    } catch (e) {
+        console.error('[Chatter] Login error:', e);
+        errorEl.textContent = '⚠️ خطا در بررسی رمز';
+    } finally {
+        btn.disabled = false;
+        btn.textContent = originalText;
     }
 }
 
 async function attemptAutoLogin() {
     const savedToken = getSavedToken();
-    if (!savedToken) { switchScreen('token'); return; }
+    if (!savedToken) {
+        console.log('[Chatter] No saved token, going to token screen');
+        switchScreen('token');
+        return;
+    }
     try {
-        const res = await fetch('https://api.github.com/user', {
+        const res = await fetchWithTimeout('https://api.github.com/user', {
             headers: { 'Authorization': `token ${savedToken}` }
-        });
-        if (!res.ok) { clearToken(); switchScreen('token'); return; }
+        }, 5000);
+
+        if (!res.ok) {
+            console.warn('[Chatter] Saved token invalid, clearing');
+            clearToken();
+            switchScreen('token');
+            return;
+        }
         const userData = await res.json();
         currentUsername = userData.login;
         currentAvatar = userData.avatar_url;
         currentToken = savedToken;
         switchScreen('chat');
         startChat();
-    } catch (e) { switchScreen('token'); }
+    } catch (e) {
+        console.warn('[Chatter] Auto-login failed:', e.message);
+        switchScreen('token');
+    }
 }
 
-// ==================== مرحله ۲ ====================
+// ==================== مرحله ۲: اتصال توکن ====================
 document.getElementById('connectBtn').addEventListener('click', connectManual);
 document.getElementById('tokenInput').addEventListener('keypress', (e) => {
     if (e.key === 'Enter') connectManual();
@@ -243,14 +317,25 @@ document.getElementById('tokenInput').addEventListener('keypress', (e) => {
 async function connectManual() {
     const tokenInput = document.getElementById('tokenInput');
     const errorEl = document.getElementById('tokenError');
+    const btn = document.getElementById('connectBtn');
     const token = tokenInput.value.trim();
+
     if (!token) { errorEl.textContent = 'توکن را وارد کن'; return; }
+
+    btn.disabled = true;
+    const originalText = btn.textContent;
+    btn.textContent = '...';
     errorEl.textContent = 'در حال بررسی...';
+
     try {
-        const res = await fetch('https://api.github.com/user', {
+        const res = await fetchWithTimeout('https://api.github.com/user', {
             headers: { 'Authorization': `token ${token}` }
-        });
-        if (!res.ok) { errorEl.textContent = '❌ توکن نامعتبر یا دسترسی ناکافی'; return; }
+        }, 6000);
+
+        if (!res.ok) {
+            errorEl.textContent = '❌ توکن نامعتبر یا دسترسی ناکافی';
+            return;
+        }
         const userData = await res.json();
         currentUsername = userData.login;
         currentAvatar = userData.avatar_url;
@@ -260,7 +345,13 @@ async function connectManual() {
         errorEl.textContent = '';
         switchScreen('chat');
         startChat();
-    } catch (e) { errorEl.textContent = '⚠️ مشکل در اتصال'; }
+    } catch (e) {
+        errorEl.textContent = '⚠️ مشکل در اتصال یا تایم‌اوت';
+        console.error(e);
+    } finally {
+        btn.disabled = false;
+        btn.textContent = originalText;
+    }
 }
 
 // ==================== جابجایی صفحات ====================
@@ -309,9 +400,10 @@ function startChat() {
 async function loadMessages() {
     if (!currentToken) return;
     try {
-        const res = await fetch(API_URL, {
+        const res = await fetchWithTimeout(API_URL, {
             headers: { 'Authorization': `token ${currentToken}` }
-        });
+        }, 5000);
+
         if (!res.ok) return;
         const data = await res.json();
         const content = JSON.parse(base64ToUtf8(data.content));
@@ -327,7 +419,7 @@ async function loadMessages() {
             if (window.VoiceManager) VoiceManager.attachVoicePlayers();
         }
     } catch (e) {
-        console.warn('بارگذاری پیام‌ها با خطا مواجه شد', e);
+        console.warn('[Chatter] Load messages failed:', e.message);
     }
 }
 
@@ -347,13 +439,13 @@ async function sendMessage() {
 
     const updated = [...messages, newMsg];
     try {
-        const getRes = await fetch(API_URL, {
+        const getRes = await fetchWithTimeout(API_URL, {
             headers: { 'Authorization': `token ${currentToken}` }
-        });
+        }, 5000);
         if (!getRes.ok) throw new Error('دریافت فایل ناموفق');
         const { sha } = await getRes.json();
 
-        const putRes = await fetch(API_URL, {
+        const putRes = await fetchWithTimeout(API_URL, {
             method: 'PUT',
             headers: { 'Authorization': `token ${currentToken}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -361,7 +453,7 @@ async function sendMessage() {
                 content: utf8ToBase64(JSON.stringify(updated, null, 2)),
                 sha: sha
             })
-        });
+        }, 8000);
 
         if (!putRes.ok) {
             const err = await putRes.json();
@@ -397,13 +489,13 @@ async function sendVoiceMessage(base64Audio, duration) {
 
     const updated = [...messages, newMsg];
     try {
-        const getRes = await fetch(API_URL, {
+        const getRes = await fetchWithTimeout(API_URL, {
             headers: { 'Authorization': `token ${currentToken}` }
-        });
+        }, 5000);
         if (!getRes.ok) throw new Error('دریافت فایل ناموفق');
         const { sha } = await getRes.json();
 
-        const putRes = await fetch(API_URL, {
+        const putRes = await fetchWithTimeout(API_URL, {
             method: 'PUT',
             headers: { 'Authorization': `token ${currentToken}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -411,7 +503,7 @@ async function sendVoiceMessage(base64Audio, duration) {
                 content: utf8ToBase64(JSON.stringify(updated, null, 2)),
                 sha: sha
             })
-        });
+        }, 15000);
 
         if (!putRes.ok) {
             const err = await putRes.json();
@@ -497,7 +589,7 @@ function renderMessages() {
     let lastSender = null;
     let lastTime = 0;
 
-    messages.forEach((msg, index) => {
+    messages.forEach((msg) => {
         const isOwn = msg.sender === currentUsername;
         const isGrouped = msg.sender === lastSender && (msg.time - lastTime) < 5 * 60 * 1000;
 
@@ -544,7 +636,6 @@ function renderMessages() {
         lastTime = msg.time;
     });
 
-    // انیمیشن ورود
     if (window.Motion && typeof window.Motion.animate === 'function') {
         const { animate, stagger } = window.Motion;
         try {
@@ -565,7 +656,6 @@ function renderMessages() {
         });
     }
 
-    // اسکرول
     requestAnimationFrame(() => {
         container.scrollTop = container.scrollHeight;
     });
@@ -643,4 +733,5 @@ document.getElementById('msgInput').addEventListener('keypress', (e) => {
 });
 
 // ==================== شروع ====================
+console.log('[Chatter] Script initialized');
 switchScreen('password');
