@@ -511,63 +511,30 @@ async function clearAllMessages() {
 // ==================== نمایش پیام‌ها ====================
 function renderMessages() {
     const container = document.getElementById('messages');
+    if (!container) return;
     container.innerHTML = '';
-    messages.forEach(msg => {
+
+    if (!messages.length) {
+        container.innerHTML = `<div class="empty-state"><div class="empty-avatar">◉</div><h3>Welcome to Chatter</h3><p>Start a private conversation.</p></div>`;
+        return;
+    }
+
+    messages.forEach((msg, index) => {
         const div = document.createElement('div');
         div.className = `message ${msg.sender === currentUsername ? 'own' : ''}`;
-        
-        let avatarUrl = msg.avatar;
-        if (!avatarUrl) avatarUrl = `https://github.com/${msg.sender}.png`;
+        div.style.animationDelay = `${index * 40}ms`;
+        const avatarUrl = msg.avatar || `https://github.com/${msg.sender}.png`;
         const timeStr = formatTime(msg.time);
-        
         let contentHtml = '';
         if (msg.type === 'voice' && msg.data) {
-            const duration = msg.duration || 0;
-            const minutes = Math.floor(duration / 60);
-            const seconds = duration % 60;
-            const durationText = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-            contentHtml = `
-                <div class="voice-message" data-audio="${msg.data}" data-duration="${duration}">
-                    <button class="voice-play-btn">▶️</button>
-                    <div class="voice-wave">
-                        <span></span><span></span><span></span><span></span>
-                    </div>
-                    <span class="voice-duration">${durationText}</span>
-                </div>
-            `;
+            contentHtml = `<div class="voice-message premium-voice"><button class="voice-play-btn">▶</button><div class="voice-wave"><span></span><span></span><span></span><span></span></div><span>${msg.duration || 0}s</span></div>`;
         } else {
-            const text = msg.text || '';
-            contentHtml = `<span class="text">${escapeHtml(text)}</span>`;
+            contentHtml = `<span class="text">${escapeHtml(msg.text || '')}</span>`;
         }
-        
-        div.innerHTML = `
-            <div class="msg-header">
-                <img class="sender-avatar" src="${avatarUrl}" alt="">
-                <span class="sender-name">${escapeHtml(msg.sender)}</span>
-            </div>
-            ${contentHtml}
-            <div class="time">${timeStr}</div>
-        `;
+        div.innerHTML = `<div class="msg-header"><div class="avatar-wrap"><img class="sender-avatar" src="${avatarUrl}" alt=""><span class="status-dot"></span></div><span class="sender-name">${escapeHtml(msg.sender || 'User')}</span></div><div class="bubble">${contentHtml}</div><div class="time">${timeStr}</div>`;
         container.appendChild(div);
     });
-    container.scrollTop = container.scrollHeight;
-}
-
-function formatTime(timestamp) {
-    const d = new Date(timestamp);
-    try {
-        return d.toLocaleString('fa-IR', {
-            year: 'numeric', month: '2-digit', day: '2-digit',
-            hour: '2-digit', minute: '2-digit'
-        });
-    } catch (e) {
-        return d.toLocaleString();
-    }
-}
-
-function escapeHtml(text) {
-    const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
-    return text.replace(/[&<>"']/g, m => map[m]);
+    container.scrollTo({top: container.scrollHeight, behavior:'smooth'});
 }
 
 // ==================== پنل اموجی و استیکر ====================
