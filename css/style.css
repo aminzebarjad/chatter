@@ -1,13 +1,26 @@
+/* ============================================================
+   CHATTER — Cross-Browser Stylesheet
+   ✅ Chrome / Edge / Safari / Firefox / iOS / Android
+   ============================================================ */
+
 /* ==================== RESET & BASE ==================== */
-* {
+*,
+*::before,
+*::after {
     box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
     font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Tahoma, sans-serif;
     -webkit-tap-highlight-color: transparent;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
 }
 
 html {
     -webkit-text-size-adjust: 100%;
+    -moz-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
     text-size-adjust: 100%;
+    height: 100%;
 }
 
 html, body {
@@ -16,14 +29,36 @@ html, body {
     background: #050507;
     color: #e8e8ed;
     min-height: 100%;
+    /* ✅ Firefox */
+    -moz-osx-font-smoothing: grayscale;
+    /* ✅ Webkit */
+    -webkit-font-smoothing: antialiased;
     overscroll-behavior-y: none;
+    -webkit-overscroll-behavior-y: none;
 }
 
 body {
     min-height: 100vh;
+    /* ✅ dvh با fallback برای مرورگرهای قدیمی */
+    min-height: -webkit-fill-available;
     min-height: 100dvh;
-    /* ✅ به جای overflow hidden از position relative استفاده می‌کنیم */
     position: relative;
+    line-height: 1.5;
+}
+
+/* ✅ Firefox: رفع مشکل long-press */
+button, input, a {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+input {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
 }
 
 /* ==================== SCREENS ==================== */
@@ -31,25 +66,28 @@ body {
     display: none;
     width: 100%;
     min-height: 100vh;
+    min-height: -webkit-fill-available;
     min-height: 100dvh;
 }
 
 .screen.active {
     display: flex;
-    align-items: flex-start;   /* ✅ به جای center */
+    align-items: flex-start;
     justify-content: center;
-    /* ✅ اسکرول‌پذیر با شتاب لمسی خوب */
     overflow-y: auto;
     overflow-x: hidden;
+    /* ✅ iOS smooth scrolling */
     -webkit-overflow-scrolling: touch;
-    /* ✅ پدینگ بالا و پایین برای safe area */
+    /* ✅ Safe area با fallback */
+    padding-top: max(24px, constant(safe-area-inset-top));
     padding-top: max(24px, env(safe-area-inset-top, 0px));
+    padding-bottom: max(24px, constant(safe-area-inset-bottom));
     padding-bottom: max(24px, env(safe-area-inset-bottom, 0px));
     padding-left: 16px;
     padding-right: 16px;
 }
 
-/* ✅ محتوای مرکز، اگر جا شد وسط، اگر بلند شد از بالا شروع می‌شه */
+/* ✅ وسط‌چینی هوشمند */
 .screen.active > * {
     margin-top: auto;
     margin-bottom: auto;
@@ -57,7 +95,6 @@ body {
     max-width: 100%;
 }
 
-/* ✅ چت اسکرین رو از این قاعده مستثنی می‌کنیم */
 #chatScreen.active {
     padding: 0;
     overflow: hidden;
@@ -69,7 +106,11 @@ body {
     max-width: 672px;
 }
 
-/* ==================== SCROLLBAR ==================== */
+/* ============================================================
+   SCROLLBAR
+   ============================================================ */
+
+/* ✅ Webkit (Chrome, Safari, Edge, Opera) */
 ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -80,9 +121,21 @@ body {
 ::-webkit-scrollbar-thumb {
     background: #2a2a35;
     border-radius: 3px;
+    -webkit-border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
     background: #3a3a45;
+}
+
+/* ✅ Firefox */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: #2a2a35 transparent;
+}
+
+/* ✅ IE/Edge قدیمی */
+body {
+    -ms-overflow-style: -ms-autohiding-scrollbar;
 }
 
 /* ==================== CHAT SHELL ==================== */
@@ -91,24 +144,44 @@ body {
     max-width: 672px;
     height: 92vh;
     height: 92dvh;
+    display: -webkit-box;
+    display: -ms-flexbox;
     display: flex;
+    -webkit-box-orient: vertical;
+    -webkit-box-direction: normal;
+    -ms-flex-direction: column;
     flex-direction: column;
     border-radius: 20px;
+    -webkit-border-radius: 20px;
     overflow: hidden;
     border: 1px solid #1e1e26;
     background: #0f0f13;
     position: relative;
+    -webkit-box-shadow: 0 25px 80px rgba(0, 0, 0, 0.5);
     box-shadow: 0 25px 80px rgba(0, 0, 0, 0.5);
+    /* ✅ رفع باگ stacking context */
     isolation: isolate;
+    -webkit-isolation: isolate;
+    /* ✅ رفع blur/overflow در Safari */
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
 }
 
 .chat-header {
+    display: -webkit-box;
+    display: -ms-flexbox;
     display: flex;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
     align-items: center;
     gap: 12px;
     padding: 12px 16px;
     border-bottom: 1px solid #1e1e26;
     background: #0f0f13;
+    -webkit-box-flex: 0;
+    -ms-flex: 0 0 auto;
     flex-shrink: 0;
     position: relative;
     z-index: 2;
@@ -122,6 +195,8 @@ body {
     right: 0;
     height: 1px;
     background: linear-gradient(90deg, transparent, #c8ff4d20, transparent);
+    background: -webkit-linear-gradient(90deg, transparent, #c8ff4d20, transparent);
+    background: -moz-linear-gradient(90deg, transparent, #c8ff4d20, transparent);
 }
 
 /* ==================== ICON BUTTON ==================== */
@@ -129,39 +204,84 @@ body {
     width: 36px;
     height: 36px;
     border-radius: 10px;
+    -webkit-border-radius: 10px;
+    display: -webkit-box;
+    display: -ms-flexbox;
     display: flex;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
     align-items: center;
+    -webkit-box-pack: center;
+    -ms-flex-pack: center;
     justify-content: center;
     background: transparent;
     border: none;
     color: #6b6b7a;
     cursor: pointer;
+    /* ✅ vendor prefixes */
+    -webkit-transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    -moz-transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    -o-transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    -webkit-box-flex: 0;
+    -ms-flex: 0 0 auto;
     flex-shrink: 0;
+    /* ✅ حذف outline پیش‌فرض */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    /* ✅ رفع tap highlight */
+    -webkit-touch-callout: none;
 }
 
 .icon-btn:hover {
     background: #1e1e26;
     color: #e8e8ed;
+    -webkit-transform: translateY(-1px);
+    -ms-transform: translateY(-1px);
     transform: translateY(-1px);
 }
 
 .icon-btn:active {
+    -webkit-transform: scale(0.94);
+    -ms-transform: scale(0.94);
     transform: scale(0.94);
+}
+
+/* ✅ Firefox focus */
+.icon-btn::-moz-focus-inner {
+    border: 0;
+    padding: 0;
 }
 
 /* ==================== MESSAGES CONTAINER ==================== */
 .messages {
-    flex: 1;
+    -webkit-box-flex: 1;
+    -ms-flex: 1 1 auto;
+    flex: 1 1 auto;
     overflow-y: auto;
     overflow-x: hidden;
     padding: 20px 16px;
+    display: -webkit-box;
+    display: -ms-flexbox;
     display: flex;
+    -webkit-box-orient: vertical;
+    -webkit-box-direction: normal;
+    -ms-flex-direction: column;
     flex-direction: column;
+    /* ✅ smooth scroll با fallback */
     scroll-behavior: smooth;
+    -webkit-scroll-behavior: smooth;
     position: relative;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
+    -webkit-overscroll-behavior: contain;
+    background:
+        radial-gradient(circle at 20% 0%, rgba(200, 255, 77, 0.02), transparent 40%),
+        radial-gradient(circle at 80% 100%, rgba(200, 255, 77, 0.015), transparent 40%);
+    background:
+        -webkit-radial-gradient(circle at 20% 0%, rgba(200, 255, 77, 0.02), transparent 40%),
+        -webkit-radial-gradient(circle at 80% 100%, rgba(200, 255, 77, 0.015), transparent 40%);
     background:
         radial-gradient(circle at 20% 0%, rgba(200, 255, 77, 0.02), transparent 40%),
         radial-gradient(circle at 80% 100%, rgba(200, 255, 77, 0.015), transparent 40%);
@@ -169,22 +289,37 @@ body {
 
 /* ==================== MESSAGE ROW ==================== */
 .message {
+    display: -webkit-box;
+    display: -ms-flexbox;
     display: flex;
     gap: 10px;
+    -webkit-box-align: end;
+    -ms-flex-align: end;
     align-items: flex-end;
     opacity: 0;
+    -webkit-transform: translateY(10px);
+    -ms-transform: translateY(10px);
     transform: translateY(10px);
     max-width: 100%;
 }
 
 .message.visible {
     opacity: 1;
+    -webkit-transform: translateY(0);
+    -ms-transform: translateY(0);
     transform: translateY(0);
+    -webkit-transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                -webkit-transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
     transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    -moz-transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1),
                 transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .message.own {
+    -webkit-box-orient: horizontal;
+    -webkit-box-direction: reverse;
+    -ms-flex-direction: row-reverse;
     flex-direction: row-reverse;
 }
 
@@ -198,14 +333,20 @@ body {
     margin-top: 0;
 }
 
+/* Avatar */
 .msg-avatar {
     width: 28px;
     height: 28px;
     border-radius: 50%;
+    -webkit-border-radius: 50%;
+    -o-object-fit: cover;
     object-fit: cover;
+    -webkit-box-flex: 0;
+    -ms-flex: 0 0 auto;
     flex-shrink: 0;
     background: #16161c;
     margin-bottom: 4px;
+    -webkit-transition: opacity 0.2s ease;
     transition: opacity 0.2s ease;
 }
 
@@ -214,21 +355,32 @@ body {
     pointer-events: none;
 }
 
+/* Content column */
 .msg-content {
+    display: -webkit-box;
+    display: -ms-flexbox;
     display: flex;
+    -webkit-box-orient: vertical;
+    -webkit-box-direction: normal;
+    -ms-flex-direction: column;
     flex-direction: column;
     min-width: 0;
     max-width: 78%;
 }
 
 .message.own .msg-content {
+    -webkit-box-align: end;
+    -ms-flex-align: end;
     align-items: flex-end;
 }
 
 .message:not(.own) .msg-content {
+    -webkit-box-align: start;
+    -ms-flex-align: start;
     align-items: flex-start;
 }
 
+/* Sender name */
 .msg-name {
     font-size: 10.5px;
     color: #6b6b7a;
@@ -246,23 +398,44 @@ body {
     padding: 9px 14px;
     font-size: 14px;
     line-height: 1.5;
+    /* ✅ cross-browser word wrapping */
     word-break: break-word;
+    word-wrap: break-word;
     overflow-wrap: anywhere;
+    -ms-word-break: break-all;
+    -ms-word-wrap: break-word;
     white-space: pre-wrap;
     position: relative;
     max-width: 100%;
+    -webkit-animation: bubbleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    -moz-animation: bubbleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    -o-animation: bubbleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     animation: bubbleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+@-webkit-keyframes bubbleIn {
+    from { -webkit-transform: scale(0.95); opacity: 0; }
+    to { -webkit-transform: scale(1); opacity: 1; }
+}
+@-moz-keyframes bubbleIn {
+    from { -moz-transform: scale(0.95); opacity: 0; }
+    to { -moz-transform: scale(1); opacity: 1; }
+}
 @keyframes bubbleIn {
     from { transform: scale(0.95); opacity: 0; }
     to { transform: scale(1); opacity: 1; }
 }
 
 .message.own .bubble {
+    background: #c8ff4d;
+    background: -webkit-linear-gradient(135deg, #c8ff4d 0%, #b8ef3d 100%);
+    background: -moz-linear-gradient(135deg, #c8ff4d 0%, #b8ef3d 100%);
+    background: -o-linear-gradient(135deg, #c8ff4d 0%, #b8ef3d 100%);
     background: linear-gradient(135deg, #c8ff4d 0%, #b8ef3d 100%);
     color: #050507;
     border-radius: 16px 16px 4px 16px;
+    -webkit-border-radius: 16px 16px 4px 16px;
+    -webkit-box-shadow: 0 2px 8px rgba(200, 255, 77, 0.15);
     box-shadow: 0 2px 8px rgba(200, 255, 77, 0.15);
     font-weight: 500;
 }
@@ -272,14 +445,18 @@ body {
     border: 1px solid #1e1e26;
     color: #e8e8ed;
     border-radius: 16px 16px 16px 4px;
+    -webkit-border-radius: 16px 16px 16px 4px;
+    -webkit-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
 }
 
 .message.grouped.own .bubble {
     border-radius: 16px 4px 4px 16px;
+    -webkit-border-radius: 16px 4px 4px 16px;
 }
 .message.grouped:not(.own) .bubble {
     border-radius: 4px 16px 16px 4px;
+    -webkit-border-radius: 4px 16px 16px 4px;
 }
 
 /* ==================== TIME ==================== */
@@ -289,6 +466,7 @@ body {
     margin: 4px 8px 0;
     font-weight: 500;
     letter-spacing: 0.02em;
+    -webkit-transition: opacity 0.2s;
     transition: opacity 0.2s;
 }
 
@@ -298,21 +476,34 @@ body {
 
 /* ==================== VOICE MESSAGE ==================== */
 .voice-message {
+    display: -webkit-box;
+    display: -ms-flexbox;
     display: flex;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
     align-items: center;
     gap: 10px;
     padding: 8px 14px 8px 10px;
     min-width: 180px;
     max-width: 100%;
     position: relative;
+    -webkit-animation: bubbleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     animation: bubbleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .message.own .voice-message {
+    background: #c8ff4d;
+    background: -webkit-linear-gradient(135deg, #c8ff4d 0%, #b8ef3d 100%);
+    background: -moz-linear-gradient(135deg, #c8ff4d 0%, #b8ef3d 100%);
     background: linear-gradient(135deg, #c8ff4d 0%, #b8ef3d 100%);
     color: #050507;
     border-radius: 16px 16px 4px 16px;
+    -webkit-border-radius: 16px 16px 4px 16px;
+    -webkit-box-shadow: 0 2px 8px rgba(200, 255, 77, 0.15);
     box-shadow: 0 2px 8px rgba(200, 255, 77, 0.15);
+    -webkit-box-orient: horizontal;
+    -webkit-box-direction: reverse;
+    -ms-flex-direction: row-reverse;
     flex-direction: row-reverse;
 }
 
@@ -321,6 +512,8 @@ body {
     border: 1px solid #1e1e26;
     color: #e8e8ed;
     border-radius: 16px 16px 16px 4px;
+    -webkit-border-radius: 16px 16px 16px 4px;
+    -webkit-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
 }
 
@@ -328,13 +521,33 @@ body {
     width: 34px;
     height: 34px;
     border-radius: 50%;
+    -webkit-border-radius: 50%;
     border: none;
     cursor: pointer;
+    display: -webkit-box;
+    display: -ms-flexbox;
     display: flex;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
     align-items: center;
+    -webkit-box-pack: center;
+    -ms-flex-pack: center;
     justify-content: center;
+    -webkit-box-flex: 0;
+    -ms-flex: 0 0 auto;
     flex-shrink: 0;
+    -webkit-transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    -moz-transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    padding: 0;
+    /* ✅ Firefox */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}
+
+.voice-play-btn::-moz-focus-inner {
+    border: 0;
     padding: 0;
 }
 
@@ -349,10 +562,14 @@ body {
 }
 
 .voice-play-btn:hover {
+    -webkit-transform: scale(1.08);
+    -ms-transform: scale(1.08);
     transform: scale(1.08);
 }
 
 .voice-play-btn:active {
+    -webkit-transform: scale(0.92);
+    -ms-transform: scale(0.92);
     transform: scale(0.92);
 }
 
@@ -368,11 +585,18 @@ body {
     display: block;
 }
 
+/* Waveform */
 .voice-wave {
+    display: -webkit-box;
+    display: -ms-flexbox;
     display: flex;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
     align-items: center;
     gap: 2.5px;
     height: 20px;
+    -webkit-box-flex: 1;
+    -ms-flex: 1 1 auto;
     flex: 1;
     min-width: 60px;
 }
@@ -382,8 +606,14 @@ body {
     width: 2.5px;
     background: currentColor;
     border-radius: 2px;
+    -webkit-border-radius: 2px;
     opacity: 0.55;
+    -webkit-transition: opacity 0.2s;
     transition: opacity 0.2s;
+    /* ✅ Webkit/Moz */
+    -webkit-transform-origin: center;
+    -moz-transform-origin: center;
+    -ms-transform-origin: center;
     transform-origin: center;
 }
 
@@ -412,22 +642,32 @@ body {
 
 .voice-message.playing .voice-wave span {
     opacity: 0.9;
+    -webkit-animation: waveBar 0.9s ease-in-out infinite;
+    -moz-animation: waveBar 0.9s ease-in-out infinite;
     animation: waveBar 0.9s ease-in-out infinite;
 }
 
-.voice-message.playing .voice-wave span:nth-child(1)  { animation-delay: 0s; }
-.voice-message.playing .voice-wave span:nth-child(2)  { animation-delay: 0.08s; }
-.voice-message.playing .voice-wave span:nth-child(3)  { animation-delay: 0.16s; }
-.voice-message.playing .voice-wave span:nth-child(4)  { animation-delay: 0.24s; }
-.voice-message.playing .voice-wave span:nth-child(5)  { animation-delay: 0.32s; }
-.voice-message.playing .voice-wave span:nth-child(6)  { animation-delay: 0.40s; }
-.voice-message.playing .voice-wave span:nth-child(7)  { animation-delay: 0.48s; }
-.voice-message.playing .voice-wave span:nth-child(8)  { animation-delay: 0.56s; }
-.voice-message.playing .voice-wave span:nth-child(9)  { animation-delay: 0.64s; }
-.voice-message.playing .voice-wave span:nth-child(10) { animation-delay: 0.72s; }
-.voice-message.playing .voice-wave span:nth-child(11) { animation-delay: 0.80s; }
-.voice-message.playing .voice-wave span:nth-child(12) { animation-delay: 0.88s; }
+.voice-message.playing .voice-wave span:nth-child(1)  { -webkit-animation-delay: 0s; animation-delay: 0s; }
+.voice-message.playing .voice-wave span:nth-child(2)  { -webkit-animation-delay: 0.08s; animation-delay: 0.08s; }
+.voice-message.playing .voice-wave span:nth-child(3)  { -webkit-animation-delay: 0.16s; animation-delay: 0.16s; }
+.voice-message.playing .voice-wave span:nth-child(4)  { -webkit-animation-delay: 0.24s; animation-delay: 0.24s; }
+.voice-message.playing .voice-wave span:nth-child(5)  { -webkit-animation-delay: 0.32s; animation-delay: 0.32s; }
+.voice-message.playing .voice-wave span:nth-child(6)  { -webkit-animation-delay: 0.40s; animation-delay: 0.40s; }
+.voice-message.playing .voice-wave span:nth-child(7)  { -webkit-animation-delay: 0.48s; animation-delay: 0.48s; }
+.voice-message.playing .voice-wave span:nth-child(8)  { -webkit-animation-delay: 0.56s; animation-delay: 0.56s; }
+.voice-message.playing .voice-wave span:nth-child(9)  { -webkit-animation-delay: 0.64s; animation-delay: 0.64s; }
+.voice-message.playing .voice-wave span:nth-child(10) { -webkit-animation-delay: 0.72s; animation-delay: 0.72s; }
+.voice-message.playing .voice-wave span:nth-child(11) { -webkit-animation-delay: 0.80s; animation-delay: 0.80s; }
+.voice-message.playing .voice-wave span:nth-child(12) { -webkit-animation-delay: 0.88s; animation-delay: 0.88s; }
 
+@-webkit-keyframes waveBar {
+    0%, 100% { -webkit-transform: scaleY(0.5); }
+    50% { -webkit-transform: scaleY(1.3); }
+}
+@-moz-keyframes waveBar {
+    0%, 100% { -moz-transform: scaleY(0.5); }
+    50% { -moz-transform: scaleY(1.3); }
+}
 @keyframes waveBar {
     0%, 100% { transform: scaleY(0.5); }
     50% { transform: scaleY(1.3); }
@@ -437,20 +677,34 @@ body {
     font-size: 11px;
     font-weight: 600;
     font-variant-numeric: tabular-nums;
+    -webkit-font-feature-settings: "tnum";
+    font-feature-settings: "tnum";
     letter-spacing: 0.02em;
+    -webkit-box-flex: 0;
+    -ms-flex: 0 0 auto;
     flex-shrink: 0;
     opacity: 0.7;
 }
 
 /* ==================== EMPTY STATE ==================== */
 .empty-state {
+    display: -webkit-box;
+    display: -ms-flexbox;
     display: flex;
+    -webkit-box-orient: vertical;
+    -webkit-box-direction: normal;
+    -ms-flex-direction: column;
     flex-direction: column;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
     align-items: center;
+    -webkit-box-pack: center;
+    -ms-flex-pack: center;
     justify-content: center;
     height: 100%;
     text-align: center;
     padding: 40px 20px;
+    -webkit-animation: floatIn 0.6s cubic-bezier(0.16, 1, 0.3, 1);
     animation: floatIn 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -458,10 +712,20 @@ body {
     width: 76px;
     height: 76px;
     border-radius: 22px;
+    -webkit-border-radius: 22px;
+    background: #16161c;
+    background: -webkit-linear-gradient(135deg, #16161c 0%, #0f0f13 100%);
+    background: -moz-linear-gradient(135deg, #16161c 0%, #0f0f13 100%);
     background: linear-gradient(135deg, #16161c 0%, #0f0f13 100%);
     border: 1px solid #1e1e26;
+    display: -webkit-box;
+    display: -ms-flexbox;
     display: flex;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
     align-items: center;
+    -webkit-box-pack: center;
+    -ms-flex-pack: center;
     justify-content: center;
     margin-bottom: 20px;
     position: relative;
@@ -471,20 +735,36 @@ body {
 .empty-icon::before {
     content: '';
     position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
     inset: 0;
+    background: -webkit-radial-gradient(circle at 30% 20%, rgba(200, 255, 77, 0.08), transparent 60%);
     background: radial-gradient(circle at 30% 20%, rgba(200, 255, 77, 0.08), transparent 60%);
 }
 
 .empty-icon svg {
     position: relative;
+    -webkit-animation: floatY 3s ease-in-out infinite;
+    -moz-animation: floatY 3s ease-in-out infinite;
     animation: floatY 3s ease-in-out infinite;
 }
 
+@-webkit-keyframes floatY {
+    0%, 100% { -webkit-transform: translateY(0); }
+    50% { -webkit-transform: translateY(-4px); }
+}
+@-moz-keyframes floatY {
+    0%, 100% { -moz-transform: translateY(0); }
+    50% { -moz-transform: translateY(-4px); }
+}
 @keyframes floatY {
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-4px); }
 }
 
+@-webkit-keyframes floatIn {
+    from { opacity: 0; -webkit-transform: translateY(20px); }
+    to { opacity: 1; -webkit-transform: translateY(0); }
+}
 @keyframes floatIn {
     from { opacity: 0; transform: translateY(20px); }
     to { opacity: 1; transform: translateY(0); }
@@ -493,9 +773,12 @@ body {
 /* ==================== COMPOSER ==================== */
 .composer {
     padding: 10px 12px;
+    padding-bottom: calc(10px + constant(safe-area-inset-bottom));
     padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
     border-top: 1px solid #1e1e26;
     background: #0f0f13;
+    -webkit-box-flex: 0;
+    -ms-flex: 0 0 auto;
     flex-shrink: 0;
     position: relative;
     z-index: 1;
@@ -508,11 +791,17 @@ body {
     left: 0;
     right: 0;
     height: 1px;
+    background: -webkit-linear-gradient(90deg, transparent, #c8ff4d15, transparent);
+    background: -moz-linear-gradient(90deg, transparent, #c8ff4d15, transparent);
     background: linear-gradient(90deg, transparent, #c8ff4d15, transparent);
 }
 
 .composer-inner {
+    display: -webkit-box;
+    display: -ms-flexbox;
     display: flex;
+    -webkit-box-align: end;
+    -ms-flex-align: end;
     align-items: flex-end;
     gap: 6px;
 }
@@ -521,24 +810,47 @@ body {
     width: 40px;
     height: 40px;
     border-radius: 12px;
+    -webkit-border-radius: 12px;
+    display: -webkit-box;
+    display: -ms-flexbox;
     display: flex;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
     align-items: center;
+    -webkit-box-pack: center;
+    -ms-flex-pack: center;
     justify-content: center;
     background: transparent;
     border: none;
     color: #6b6b7a;
     cursor: pointer;
+    -webkit-transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    -moz-transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    -webkit-box-flex: 0;
+    -ms-flex: 0 0 auto;
     flex-shrink: 0;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}
+
+.composer-btn::-moz-focus-inner {
+    border: 0;
+    padding: 0;
 }
 
 .composer-btn:hover {
     background: #1e1e26;
     color: #c8ff4d;
+    -webkit-transform: translateY(-1px);
+    -ms-transform: translateY(-1px);
     transform: translateY(-1px);
 }
 
 .composer-btn:active {
+    -webkit-transform: scale(0.92);
+    -ms-transform: scale(0.92);
     transform: scale(0.92);
 }
 
@@ -548,60 +860,129 @@ body {
 }
 
 .composer-input-wrap {
+    -webkit-box-flex: 1;
+    -ms-flex: 1 1 auto;
     flex: 1;
     min-width: 0;
     position: relative;
 }
 
+/* ✅ ورودی — همه‌ی vendor prefixها */
 .composer-input-wrap input {
     width: 100%;
     background: #16161c;
     border: 1px solid #1e1e26;
     border-radius: 12px;
+    -webkit-border-radius: 12px;
     padding: 10px 14px;
     font-size: 16px;
     line-height: 1.4;
     color: #e8e8ed;
     outline: none;
+    -webkit-transition: all 0.2s ease;
+    -moz-transition: all 0.2s ease;
     transition: all 0.2s ease;
     min-height: 40px;
+    /* ✅ Vendor prefixes */
     -webkit-appearance: none;
+    -moz-appearance: none;
     appearance: none;
+    /* ✅ Firefox */
+    -moz-osx-font-smoothing: grayscale;
+    /* ✅ رفع border-radius در iOS Safari */
+    -webkit-border-radius: 12px;
+    /* ✅ فونت */
     font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Tahoma, sans-serif;
 }
 
+/* ✅ Firefox placeholder */
 .composer-input-wrap input::placeholder {
     color: #3a3a45;
+    opacity: 1;
+}
+
+.composer-input-wrap input::-webkit-input-placeholder {
+    color: #3a3a45;
+    opacity: 1;
+}
+
+.composer-input-wrap input::-moz-placeholder {
+    color: #3a3a45;
+    opacity: 1;
+}
+
+.composer-input-wrap input:-ms-input-placeholder {
+    color: #3a3a45;
+    opacity: 1;
 }
 
 .composer-input-wrap input:focus {
     border-color: rgba(200, 255, 77, 0.5);
     background: #1a1a22;
+    -webkit-box-shadow: 0 0 0 3px rgba(200, 255, 77, 0.05);
     box-shadow: 0 0 0 3px rgba(200, 255, 77, 0.05);
+}
+
+/* ✅ Firefox دکمه پاک کردن input */
+.composer-input-wrap input::-moz-clear {
+    display: none;
+}
+
+/* ✅ حذف آیکون جستجو در Edge قدیمی */
+.composer-input-wrap input::-ms-clear {
+    display: none;
 }
 
 .composer-send {
     width: 40px;
     height: 40px;
     border-radius: 12px;
+    -webkit-border-radius: 12px;
+    background: #c8ff4d;
+    background: -webkit-linear-gradient(135deg, #c8ff4d 0%, #b8ef3d 100%);
+    background: -moz-linear-gradient(135deg, #c8ff4d 0%, #b8ef3d 100%);
     background: linear-gradient(135deg, #c8ff4d 0%, #b8ef3d 100%);
     color: #050507;
     border: none;
+    display: -webkit-box;
+    display: -ms-flexbox;
     display: flex;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
     align-items: center;
+    -webkit-box-pack: center;
+    -ms-flex-pack: center;
     justify-content: center;
     cursor: pointer;
+    -webkit-transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    -moz-transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    -webkit-box-flex: 0;
+    -ms-flex: 0 0 auto;
     flex-shrink: 0;
+    -webkit-box-shadow: 0 2px 10px rgba(200, 255, 77, 0.2);
     box-shadow: 0 2px 10px rgba(200, 255, 77, 0.2);
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}
+
+.composer-send::-moz-focus-inner {
+    border: 0;
+    padding: 0;
 }
 
 .composer-send:hover {
+    -webkit-transform: translateY(-1px) scale(1.02);
+    -ms-transform: translateY(-1px) scale(1.02);
     transform: translateY(-1px) scale(1.02);
+    -webkit-box-shadow: 0 4px 14px rgba(200, 255, 77, 0.3);
     box-shadow: 0 4px 14px rgba(200, 255, 77, 0.3);
 }
 
 .composer-send:active {
+    -webkit-transform: scale(0.94);
+    -ms-transform: scale(0.94);
     transform: scale(0.94);
 }
 
@@ -609,26 +990,36 @@ body {
 .modal {
     display: none;
     position: fixed;
+    top: 0; right: 0; bottom: 0; left: 0;
     inset: 0;
     z-index: 200;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
     align-items: center;
+    -webkit-box-pack: center;
+    -ms-flex-pack: center;
     justify-content: center;
     padding: 16px;
-    /* ✅ خود مودال هم اسکرول‌پذیر */
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .modal.show {
+    display: -webkit-box;
+    display: -ms-flexbox;
     display: flex;
+    -webkit-animation: modalFade 0.2s ease;
     animation: modalFade 0.2s ease;
 }
 
 .modal-overlay {
     position: fixed;
+    top: 0; right: 0; bottom: 0; left: 0;
     inset: 0;
     background: rgba(5, 5, 7, 0.75);
-    backdrop-filter: blur(8px);
+    /* ✅ backdrop-filter با vendor prefix */
     -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
 }
 
 .modal-content {
@@ -636,25 +1027,38 @@ body {
     background: #0f0f13;
     border: 1px solid #1e1e26;
     border-radius: 20px;
+    -webkit-border-radius: 20px;
     padding: 24px;
     width: 100%;
     max-width: 380px;
+    -webkit-box-shadow: 0 25px 80px rgba(0, 0, 0, 0.6);
     box-shadow: 0 25px 80px rgba(0, 0, 0, 0.6);
+    -webkit-animation: modalSlide 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     animation: modalSlide 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     margin: auto;
     max-height: calc(100vh - 32px);
+    max-height: calc(100dvh - 32px);
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .modal-content input {
     font-size: 16px !important;
 }
 
+@-webkit-keyframes modalFade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
 @keyframes modalFade {
     from { opacity: 0; }
     to { opacity: 1; }
 }
 
+@-webkit-keyframes modalSlide {
+    from { opacity: 0; -webkit-transform: translateY(20px) scale(0.96); }
+    to { opacity: 1; -webkit-transform: translateY(0) scale(1); }
+}
 @keyframes modalSlide {
     from { opacity: 0; transform: translateY(20px) scale(0.96); }
     to { opacity: 1; transform: translateY(0) scale(1); }
@@ -662,9 +1066,14 @@ body {
 
 /* ==================== EMOJI PICKER ==================== */
 #emojiPicker {
+    -webkit-animation: pickerSlide 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     animation: pickerSlide 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+@-webkit-keyframes pickerSlide {
+    from { opacity: 0; -webkit-transform: translateY(8px) scale(0.96); }
+    to { opacity: 1; -webkit-transform: translateY(0) scale(1); }
+}
 @keyframes pickerSlide {
     from { opacity: 0; transform: translateY(8px) scale(0.96); }
     to { opacity: 1; transform: translateY(0) scale(1); }
@@ -675,32 +1084,53 @@ body {
 }
 
 .emoji-item {
+    display: -webkit-box;
+    display: -ms-flexbox;
     display: flex;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
     align-items: center;
+    -webkit-box-pack: center;
+    -ms-flex-pack: center;
     justify-content: center;
     width: 36px;
     height: 36px;
     font-size: 22px;
     cursor: pointer;
     border-radius: 8px;
+    -webkit-border-radius: 8px;
+    -webkit-transition: background 0.15s ease, -webkit-transform 0.15s ease;
     transition: background 0.15s ease, transform 0.15s ease;
+    -moz-transition: background 0.15s ease, transform 0.15s ease;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
     user-select: none;
 }
 
 .emoji-item:hover {
     background: #1e1e26;
+    -webkit-transform: scale(1.15);
+    -ms-transform: scale(1.15);
     transform: scale(1.15);
 }
 
 .emoji-item:active {
+    -webkit-transform: scale(0.95);
+    -ms-transform: scale(0.95);
     transform: scale(0.95);
 }
 
 /* ==================== RECORDING INDICATOR ==================== */
 #recordingIndicator {
+    -webkit-animation: recordingPulse 1.5s ease-in-out infinite;
     animation: recordingPulse 1.5s ease-in-out infinite;
 }
 
+@-webkit-keyframes recordingPulse {
+    0%, 100% { -webkit-box-shadow: 0 0 0 0 rgba(255, 68, 68, 0.3); box-shadow: 0 0 0 0 rgba(255, 68, 68, 0.3); }
+    50% { -webkit-box-shadow: 0 0 0 8px rgba(255, 68, 68, 0); box-shadow: 0 0 0 8px rgba(255, 68, 68, 0); }
+}
 @keyframes recordingPulse {
     0%, 100% { box-shadow: 0 0 0 0 rgba(255, 68, 68, 0.3); }
     50% { box-shadow: 0 0 0 8px rgba(255, 68, 68, 0); }
@@ -709,6 +1139,7 @@ body {
 /* ==================== FOCUS VISIBLE ==================== */
 button:focus-visible {
     outline: none;
+    -webkit-box-shadow: 0 0 0 2px rgba(200, 255, 77, 0.3);
     box-shadow: 0 0 0 2px rgba(200, 255, 77, 0.3);
 }
 
@@ -716,12 +1147,23 @@ input:focus {
     outline: none;
 }
 
+/* ✅ Firefox - حذف outline اضافی */
+button::-moz-focus-inner,
+input::-moz-focus-inner {
+    border: 0;
+    padding: 0;
+}
+
 /* ==================== GUIDE BOX ==================== */
-/* ✅ راهنما روی موبایل اسکرول‌پذیر داخلی داره */
 #guideBox {
+    -webkit-animation: guideSlide 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     animation: guideSlide 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+@-webkit-keyframes guideSlide {
+    from { opacity: 0; -webkit-transform: translateY(-8px); }
+    to { opacity: 1; -webkit-transform: translateY(0); }
+}
 @keyframes guideSlide {
     from { opacity: 0; transform: translateY(-8px); }
     to { opacity: 1; transform: translateY(0); }
@@ -754,7 +1196,9 @@ input:focus {
 /* ==================== SMALL MOBILE (iPhone SE, 320px) ==================== */
 @media (max-width: 374px) {
     .screen.active {
+        padding-top: max(16px, constant(safe-area-inset-top));
         padding-top: max(16px, env(safe-area-inset-top, 0px));
+        padding-bottom: max(16px, constant(safe-area-inset-bottom));
         padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
         padding-left: 12px;
         padding-right: 12px;
@@ -766,6 +1210,7 @@ input:focus {
 
     #chatScreen.active > * {
         border-radius: 0;
+        -webkit-border-radius: 0;
         border: none;
         height: 100dvh;
         max-width: 100%;
@@ -820,6 +1265,7 @@ input:focus {
         width: 36px;
         height: 36px;
         border-radius: 10px;
+        -webkit-border-radius: 10px;
     }
 
     .composer-input-wrap input {
@@ -827,6 +1273,7 @@ input:focus {
         font-size: 16px;
         min-height: 36px;
         border-radius: 10px;
+        -webkit-border-radius: 10px;
     }
 
     .voice-message {
@@ -853,7 +1300,9 @@ input:focus {
 /* ==================== MOBILE (عمومی، تا 640px) ==================== */
 @media (max-width: 640px) {
     .screen.active {
+        padding-top: max(20px, constant(safe-area-inset-top));
         padding-top: max(20px, env(safe-area-inset-top, 0px));
+        padding-bottom: max(20px, constant(safe-area-inset-bottom));
         padding-bottom: max(20px, env(safe-area-inset-bottom, 0px));
         padding-left: 16px;
         padding-right: 16px;
@@ -861,6 +1310,8 @@ input:focus {
 
     #chatScreen.active {
         padding: 0;
+        -webkit-box-align: stretch;
+        -ms-flex-align: stretch;
         align-items: stretch;
     }
 
@@ -869,7 +1320,9 @@ input:focus {
         max-width: 100%;
         height: 100dvh;
         border-radius: 0;
+        -webkit-border-radius: 0;
         border: none;
+        -webkit-box-shadow: none;
         box-shadow: none;
     }
 
@@ -927,7 +1380,6 @@ input:focus {
         bottom: calc(80px + env(safe-area-inset-bottom, 0px));
     }
 
-    /* ✅ راهنما در موبایل کمی جمع‌تر */
     #guideBox > div {
         padding: 16px;
     }
@@ -943,6 +1395,7 @@ input:focus {
     #chatScreen.active > * {
         height: 100dvh;
         border-radius: 0;
+        -webkit-border-radius: 0;
         border: none;
     }
 
@@ -1094,6 +1547,7 @@ input:focus {
         width: 44px;
         height: 44px;
         border-radius: 14px;
+        -webkit-border-radius: 14px;
     }
 
     .composer-input-wrap input {
@@ -1101,6 +1555,7 @@ input:focus {
         padding: 12px 16px;
         min-height: 44px;
         border-radius: 14px;
+        -webkit-border-radius: 14px;
     }
 
     .voice-message {
@@ -1133,6 +1588,7 @@ input:focus {
     .chat-shell {
         max-width: 1000px;
         border-radius: 28px;
+        -webkit-border-radius: 28px;
     }
 
     .chat-header {
@@ -1163,10 +1619,12 @@ input:focus {
         padding: 14px 22px;
         line-height: 1.6;
         border-radius: 22px 22px 6px 22px;
+        -webkit-border-radius: 22px 22px 6px 22px;
     }
 
     .message:not(.own) .bubble {
         border-radius: 22px 22px 22px 6px;
+        -webkit-border-radius: 22px 22px 22px 6px;
     }
 
     .msg-name {
@@ -1186,6 +1644,7 @@ input:focus {
         width: 56px;
         height: 56px;
         border-radius: 16px;
+        -webkit-border-radius: 16px;
     }
 
     .composer-btn svg,
@@ -1199,6 +1658,7 @@ input:focus {
         padding: 16px 22px;
         min-height: 56px;
         border-radius: 16px;
+        -webkit-border-radius: 16px;
     }
 
     .voice-message {
@@ -1241,6 +1701,7 @@ input:focus {
     .chat-shell {
         max-width: 1400px;
         border-radius: 36px;
+        -webkit-border-radius: 36px;
     }
 
     .chat-header {
@@ -1281,9 +1742,16 @@ input:focus {
 
 /* ==================== REDUCED MOTION ==================== */
 @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after {
+    *,
+    *::before,
+    *::after {
+        -webkit-animation-duration: 0.01ms !important;
         animation-duration: 0.01ms !important;
+        -webkit-animation-iteration-count: 1 !important;
+        animation-iteration-count: 1 !important;
+        -webkit-transition-duration: 0.01ms !important;
         transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
     }
 }
 
@@ -1297,4 +1765,73 @@ input:focus {
     .chat-header button {
         display: none;
     }
+}
+
+/* ============================================================
+   ✅ BROWSER-SPECIFIC FIXES
+   ============================================================ */
+
+/* ✅ Safari (Desktop & iOS) */
+@supports (-webkit-touch-callout: none) {
+    .chat-shell {
+        /* ✅ رفع باگ border-radius در iOS */
+        -webkit-mask-image: -webkit-radial-gradient(white, black);
+        mask-image: -webkit-radial-gradient(white, black);
+    }
+
+    /* ✅ ورودی‌های iOS */
+    input,
+    textarea {
+        /* ✅ جلوگیری از زوم */
+        font-size: 16px;
+        /* ✅ رفع باگ */
+        border-radius: 12px;
+        -webkit-border-radius: 12px;
+        -webkit-appearance: none;
+    }
+
+    /* ✅ iOS overscroll */
+    .messages {
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+/* ✅ Firefox */
+@-moz-document url-prefix() {
+    .chat-shell {
+        /* ✅ Firefox بهتر border-radius رو رندر می‌کنه */
+    }
+
+    /* ✅ Firefox scrollbar */
+    * {
+        scrollbar-width: thin;
+        scrollbar-color: #2a2a35 transparent;
+    }
+
+    /* ✅ Firefox دکمه‌ها */
+    button {
+        /* ✅ حذف inner border */
+        padding: 0;
+        font-family: inherit;
+    }
+}
+
+/* ✅ Chrome/Edge (Chromium) */
+@supports (selector(:has(*))) {
+    /* ✅ فقط برای Chromium 105+ */
+    .emoji-item:focus-visible {
+        outline: 2px solid #c8ff4d;
+        outline-offset: 2px;
+    }
+}
+
+/* ✅ حذف فلش‌های input type=number (اگر روزی استفاده کردیم) */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
 }
