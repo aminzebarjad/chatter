@@ -6,7 +6,6 @@
 }
 
 html {
-    /* ✅ جلوگیری از زوم iOS */
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
 }
@@ -14,36 +13,66 @@ html {
 html, body {
     margin: 0;
     padding: 0;
-    overflow: hidden;
     background: #050507;
     color: #e8e8ed;
-    height: 100%;
-    width: 100%;
-    overscroll-behavior: none;
-    position: fixed;
-    inset: 0;
+    min-height: 100%;
+    overscroll-behavior-y: none;
+}
+
+body {
+    min-height: 100vh;
+    min-height: 100dvh;
+    /* ✅ به جای overflow hidden از position relative استفاده می‌کنیم */
+    position: relative;
 }
 
 /* ==================== SCREENS ==================== */
 .screen {
     display: none;
     width: 100%;
-    height: 100%;
     min-height: 100vh;
     min-height: 100dvh;
-    align-items: center;
-    justify-content: center;
-    padding: 16px;
 }
 
 .screen.active {
     display: flex;
+    align-items: flex-start;   /* ✅ به جای center */
+    justify-content: center;
+    /* ✅ اسکرول‌پذیر با شتاب لمسی خوب */
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    /* ✅ پدینگ بالا و پایین برای safe area */
+    padding-top: max(24px, env(safe-area-inset-top, 0px));
+    padding-bottom: max(24px, env(safe-area-inset-bottom, 0px));
+    padding-left: 16px;
+    padding-right: 16px;
+}
+
+/* ✅ محتوای مرکز، اگر جا شد وسط، اگر بلند شد از بالا شروع می‌شه */
+.screen.active > * {
+    margin-top: auto;
+    margin-bottom: auto;
+    width: 100%;
+    max-width: 100%;
+}
+
+/* ✅ چت اسکرین رو از این قاعده مستثنی می‌کنیم */
+#chatScreen.active {
+    padding: 0;
+    overflow: hidden;
+    align-items: center;
+}
+
+#chatScreen.active > * {
+    margin: auto 0;
+    max-width: 672px;
 }
 
 /* ==================== SCROLLBAR ==================== */
 ::-webkit-scrollbar {
-    width: 5px;
-    height: 5px;
+    width: 6px;
+    height: 6px;
 }
 ::-webkit-scrollbar-track {
     background: transparent;
@@ -70,7 +99,6 @@ html, body {
     background: #0f0f13;
     position: relative;
     box-shadow: 0 25px 80px rgba(0, 0, 0, 0.5);
-    /* ✅ جلوگیری از سرریز از گوشه‌ها */
     isolation: isolate;
 }
 
@@ -170,7 +198,6 @@ html, body {
     margin-top: 0;
 }
 
-/* Avatar */
 .msg-avatar {
     width: 28px;
     height: 28px;
@@ -187,7 +214,6 @@ html, body {
     pointer-events: none;
 }
 
-/* Content column */
 .msg-content {
     display: flex;
     flex-direction: column;
@@ -203,7 +229,6 @@ html, body {
     align-items: flex-start;
 }
 
-/* Sender name */
 .msg-name {
     font-size: 10.5px;
     color: #6b6b7a;
@@ -299,7 +324,6 @@ html, body {
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
 }
 
-/* Play button */
 .voice-play-btn {
     width: 34px;
     height: 34px;
@@ -344,7 +368,6 @@ html, body {
     display: block;
 }
 
-/* Waveform */
 .voice-wave {
     display: flex;
     align-items: center;
@@ -410,7 +433,6 @@ html, body {
     50% { transform: scaleY(1.3); }
 }
 
-/* Duration */
 .voice-time {
     font-size: 11px;
     font-weight: 600;
@@ -531,7 +553,6 @@ html, body {
     position: relative;
 }
 
-/* ✅ font-size: 16px روی موبایل - جلوگیری از زوم iOS */
 .composer-input-wrap input {
     width: 100%;
     background: #16161c;
@@ -544,10 +565,8 @@ html, body {
     outline: none;
     transition: all 0.2s ease;
     min-height: 40px;
-    /* ✅ جلوگیری از زوم خودکار */
     -webkit-appearance: none;
     appearance: none;
-    /* ✅ فونت با اندازه ثابت */
     font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Tahoma, sans-serif;
 }
 
@@ -595,6 +614,8 @@ html, body {
     align-items: center;
     justify-content: center;
     padding: 16px;
+    /* ✅ خود مودال هم اسکرول‌پذیر */
+    overflow-y: auto;
 }
 
 .modal.show {
@@ -603,7 +624,7 @@ html, body {
 }
 
 .modal-overlay {
-    position: absolute;
+    position: fixed;
     inset: 0;
     background: rgba(5, 5, 7, 0.75);
     backdrop-filter: blur(8px);
@@ -620,10 +641,12 @@ html, body {
     max-width: 380px;
     box-shadow: 0 25px 80px rgba(0, 0, 0, 0.6);
     animation: modalSlide 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    margin: auto;
+    max-height: calc(100vh - 32px);
+    overflow-y: auto;
 }
 
 .modal-content input {
-    /* ✅ ورودی‌های مودال هم 16px */
     font-size: 16px !important;
 }
 
@@ -689,13 +712,22 @@ button:focus-visible {
     box-shadow: 0 0 0 2px rgba(200, 255, 77, 0.3);
 }
 
-/* ورودی‌ها focus ring دارن، پس نیازی به outline ندارن */
 input:focus {
     outline: none;
 }
 
+/* ==================== GUIDE BOX ==================== */
+/* ✅ راهنما روی موبایل اسکرول‌پذیر داخلی داره */
+#guideBox {
+    animation: guideSlide 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes guideSlide {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
 /* ==================== TOUCH DEVICES ==================== */
-/* ✅ دکمه‌های بزرگ‌تر روی دیوایس‌های لمسی */
 @media (hover: none) and (pointer: coarse) {
     .icon-btn {
         width: 40px;
@@ -721,15 +753,22 @@ input:focus {
 
 /* ==================== SMALL MOBILE (iPhone SE, 320px) ==================== */
 @media (max-width: 374px) {
-    .chat-shell {
+    .screen.active {
+        padding-top: max(16px, env(safe-area-inset-top, 0px));
+        padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+
+    #chatScreen.active {
+        padding: 0;
+    }
+
+    #chatScreen.active > * {
         border-radius: 0;
         border: none;
         height: 100dvh;
         max-width: 100%;
-    }
-
-    .screen {
-        padding: 0;
     }
 
     .messages {
@@ -813,15 +852,22 @@ input:focus {
 
 /* ==================== MOBILE (عمومی، تا 640px) ==================== */
 @media (max-width: 640px) {
-    .screen {
-        padding: 0;
-        min-height: 100dvh;
-        height: 100dvh;
+    .screen.active {
+        padding-top: max(20px, env(safe-area-inset-top, 0px));
+        padding-bottom: max(20px, env(safe-area-inset-bottom, 0px));
+        padding-left: 16px;
+        padding-right: 16px;
     }
 
-    .chat-shell {
-        height: 100dvh;
+    #chatScreen.active {
+        padding: 0;
+        align-items: stretch;
+    }
+
+    #chatScreen.active > * {
+        margin: 0;
         max-width: 100%;
+        height: 100dvh;
         border-radius: 0;
         border: none;
         box-shadow: none;
@@ -880,11 +926,21 @@ input:focus {
         width: auto;
         bottom: calc(80px + env(safe-area-inset-bottom, 0px));
     }
+
+    /* ✅ راهنما در موبایل کمی جمع‌تر */
+    #guideBox > div {
+        padding: 16px;
+    }
 }
 
 /* ==================== LANDSCAPE MOBILE ==================== */
 @media (max-height: 500px) and (orientation: landscape) {
-    .chat-shell {
+    .screen.active {
+        padding-top: max(12px, env(safe-area-inset-top, 0px));
+        padding-bottom: max(12px, env(safe-area-inset-bottom, 0px));
+    }
+
+    #chatScreen.active > * {
         height: 100dvh;
         border-radius: 0;
         border: none;
@@ -1180,8 +1236,7 @@ input:focus {
     }
 }
 
-/* ==================== TV و صفحه‌های فوق‌العاده بزرگ ==================== */
-/* ✅ برای تلویزیون - از فاصله دور خونده می‌شه */
+/* ==================== TV غول ==================== */
 @media (min-width: 3200px) {
     .chat-shell {
         max-width: 1400px;
@@ -1231,9 +1286,6 @@ input:focus {
         transition-duration: 0.01ms !important;
     }
 }
-
-/* ==================== DARK MODE ==================== */
-/* ✅ خود اپ دارک هست، پس نیازی به override نیست */
 
 /* ==================== PRINT ==================== */
 @media print {
