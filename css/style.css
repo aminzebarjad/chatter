@@ -1,6 +1,7 @@
 /* ============================================================
-   CHATTER — Cross-Browser Stylesheet
-   ✅ Chrome / Edge / Safari / Firefox / iOS / Android
+   CHATTER — Cross-Browser & Fully Responsive Stylesheet
+   ✅ Chrome / Edge / Safari / Firefox / iOS / Android / Tablet / TV
+   ✅ Fully Responsive: 320px → 4K/8K/TV
    ============================================================ */
 
 /* ==================== RESET & BASE ==================== */
@@ -29,24 +30,20 @@ html, body {
     background: #050507;
     color: #e8e8ed;
     min-height: 100%;
-    /* ✅ Firefox */
-    -moz-osx-font-smoothing: grayscale;
-    /* ✅ Webkit */
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
     overscroll-behavior-y: none;
     -webkit-overscroll-behavior-y: none;
 }
 
 body {
     min-height: 100vh;
-    /* ✅ dvh با fallback برای مرورگرهای قدیمی */
     min-height: -webkit-fill-available;
     min-height: 100dvh;
     position: relative;
     line-height: 1.5;
 }
 
-/* ✅ Firefox: رفع مشکل long-press */
 button, input, a {
     -webkit-user-select: none;
     -moz-user-select: none;
@@ -72,13 +69,11 @@ input {
 
 .screen.active {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: center;
     overflow-y: auto;
     overflow-x: hidden;
-    /* ✅ iOS smooth scrolling */
     -webkit-overflow-scrolling: touch;
-    /* ✅ Safe area با fallback */
     padding-top: max(24px, constant(safe-area-inset-top));
     padding-top: max(24px, env(safe-area-inset-top, 0px));
     padding-bottom: max(24px, constant(safe-area-inset-bottom));
@@ -87,30 +82,27 @@ input {
     padding-right: 16px;
 }
 
-/* ✅ وسط‌چینی هوشمند */
-.screen.active > * {
-    margin-top: auto;
-    margin-bottom: auto;
+/* ✅ کارت‌های auth با عرض محدود و وسط‌چین */
+.screen.active > div:not(.chat-shell) {
     width: 100%;
-    max-width: 100%;
+    max-width: 420px;
+    margin: auto;
 }
 
+/* ✅ chat-shell تمام فضا رو می‌گیره */
 #chatScreen.active {
     padding: 0;
     overflow: hidden;
-    align-items: center;
+    align-items: stretch;
 }
 
 #chatScreen.active > * {
-    margin: auto 0;
-    max-width: 672px;
+    margin: auto;
 }
 
 /* ============================================================
-   SCROLLBAR
+   SCROLLBAR — Cross-browser
    ============================================================ */
-
-/* ✅ Webkit (Chrome, Safari, Edge, Opera) */
 ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -127,13 +119,11 @@ input {
     background: #3a3a45;
 }
 
-/* ✅ Firefox */
 * {
     scrollbar-width: thin;
     scrollbar-color: #2a2a35 transparent;
 }
 
-/* ✅ IE/Edge قدیمی */
 body {
     -ms-overflow-style: -ms-autohiding-scrollbar;
 }
@@ -144,6 +134,7 @@ body {
     max-width: 672px;
     height: 92vh;
     height: 92dvh;
+    margin: auto;
     display: -webkit-box;
     display: -ms-flexbox;
     display: flex;
@@ -159,10 +150,8 @@ body {
     position: relative;
     -webkit-box-shadow: 0 25px 80px rgba(0, 0, 0, 0.5);
     box-shadow: 0 25px 80px rgba(0, 0, 0, 0.5);
-    /* ✅ رفع باگ stacking context */
     isolation: isolate;
     -webkit-isolation: isolate;
-    /* ✅ رفع blur/overflow در Safari */
     -webkit-transform: translateZ(0);
     transform: translateZ(0);
     -webkit-backface-visibility: hidden;
@@ -194,9 +183,8 @@ body {
     left: 0;
     right: 0;
     height: 1px;
-    background: linear-gradient(90deg, transparent, #c8ff4d20, transparent);
     background: -webkit-linear-gradient(90deg, transparent, #c8ff4d20, transparent);
-    background: -moz-linear-gradient(90deg, transparent, #c8ff4d20, transparent);
+    background: linear-gradient(90deg, transparent, #c8ff4d20, transparent);
 }
 
 /* ==================== ICON BUTTON ==================== */
@@ -218,19 +206,14 @@ body {
     border: none;
     color: #6b6b7a;
     cursor: pointer;
-    /* ✅ vendor prefixes */
     -webkit-transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    -moz-transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    -o-transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     -webkit-box-flex: 0;
     -ms-flex: 0 0 auto;
     flex-shrink: 0;
-    /* ✅ حذف outline پیش‌فرض */
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
-    /* ✅ رفع tap highlight */
     -webkit-touch-callout: none;
 }
 
@@ -248,7 +231,6 @@ body {
     transform: scale(0.94);
 }
 
-/* ✅ Firefox focus */
 .icon-btn::-moz-focus-inner {
     border: 0;
     padding: 0;
@@ -269,16 +251,11 @@ body {
     -webkit-box-direction: normal;
     -ms-flex-direction: column;
     flex-direction: column;
-    /* ✅ smooth scroll با fallback */
     scroll-behavior: smooth;
-    -webkit-scroll-behavior: smooth;
     position: relative;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
     -webkit-overscroll-behavior: contain;
-    background:
-        radial-gradient(circle at 20% 0%, rgba(200, 255, 77, 0.02), transparent 40%),
-        radial-gradient(circle at 80% 100%, rgba(200, 255, 77, 0.015), transparent 40%);
     background:
         -webkit-radial-gradient(circle at 20% 0%, rgba(200, 255, 77, 0.02), transparent 40%),
         -webkit-radial-gradient(circle at 80% 100%, rgba(200, 255, 77, 0.015), transparent 40%);
@@ -333,7 +310,6 @@ body {
     margin-top: 0;
 }
 
-/* Avatar */
 .msg-avatar {
     width: 28px;
     height: 28px;
@@ -355,7 +331,6 @@ body {
     pointer-events: none;
 }
 
-/* Content column */
 .msg-content {
     display: -webkit-box;
     display: -ms-flexbox;
@@ -380,7 +355,6 @@ body {
     align-items: flex-start;
 }
 
-/* Sender name */
 .msg-name {
     font-size: 10.5px;
     color: #6b6b7a;
@@ -398,7 +372,6 @@ body {
     padding: 9px 14px;
     font-size: 14px;
     line-height: 1.5;
-    /* ✅ cross-browser word wrapping */
     word-break: break-word;
     word-wrap: break-word;
     overflow-wrap: anywhere;
@@ -408,8 +381,6 @@ body {
     position: relative;
     max-width: 100%;
     -webkit-animation: bubbleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-    -moz-animation: bubbleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-    -o-animation: bubbleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     animation: bubbleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -417,20 +388,13 @@ body {
     from { -webkit-transform: scale(0.95); opacity: 0; }
     to { -webkit-transform: scale(1); opacity: 1; }
 }
-@-moz-keyframes bubbleIn {
-    from { -moz-transform: scale(0.95); opacity: 0; }
-    to { -moz-transform: scale(1); opacity: 1; }
-}
 @keyframes bubbleIn {
     from { transform: scale(0.95); opacity: 0; }
     to { transform: scale(1); opacity: 1; }
 }
 
 .message.own .bubble {
-    background: #c8ff4d;
     background: -webkit-linear-gradient(135deg, #c8ff4d 0%, #b8ef3d 100%);
-    background: -moz-linear-gradient(135deg, #c8ff4d 0%, #b8ef3d 100%);
-    background: -o-linear-gradient(135deg, #c8ff4d 0%, #b8ef3d 100%);
     background: linear-gradient(135deg, #c8ff4d 0%, #b8ef3d 100%);
     color: #050507;
     border-radius: 16px 16px 4px 16px;
@@ -492,9 +456,7 @@ body {
 }
 
 .message.own .voice-message {
-    background: #c8ff4d;
     background: -webkit-linear-gradient(135deg, #c8ff4d 0%, #b8ef3d 100%);
-    background: -moz-linear-gradient(135deg, #c8ff4d 0%, #b8ef3d 100%);
     background: linear-gradient(135deg, #c8ff4d 0%, #b8ef3d 100%);
     color: #050507;
     border-radius: 16px 16px 4px 16px;
@@ -537,10 +499,8 @@ body {
     -ms-flex: 0 0 auto;
     flex-shrink: 0;
     -webkit-transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    -moz-transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     padding: 0;
-    /* ✅ Firefox */
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
@@ -585,7 +545,6 @@ body {
     display: block;
 }
 
-/* Waveform */
 .voice-wave {
     display: -webkit-box;
     display: -ms-flexbox;
@@ -610,7 +569,6 @@ body {
     opacity: 0.55;
     -webkit-transition: opacity 0.2s;
     transition: opacity 0.2s;
-    /* ✅ Webkit/Moz */
     -webkit-transform-origin: center;
     -moz-transform-origin: center;
     -ms-transform-origin: center;
@@ -643,7 +601,6 @@ body {
 .voice-message.playing .voice-wave span {
     opacity: 0.9;
     -webkit-animation: waveBar 0.9s ease-in-out infinite;
-    -moz-animation: waveBar 0.9s ease-in-out infinite;
     animation: waveBar 0.9s ease-in-out infinite;
 }
 
@@ -663,10 +620,6 @@ body {
 @-webkit-keyframes waveBar {
     0%, 100% { -webkit-transform: scaleY(0.5); }
     50% { -webkit-transform: scaleY(1.3); }
-}
-@-moz-keyframes waveBar {
-    0%, 100% { -moz-transform: scaleY(0.5); }
-    50% { -moz-transform: scaleY(1.3); }
 }
 @keyframes waveBar {
     0%, 100% { transform: scaleY(0.5); }
@@ -713,9 +666,7 @@ body {
     height: 76px;
     border-radius: 22px;
     -webkit-border-radius: 22px;
-    background: #16161c;
     background: -webkit-linear-gradient(135deg, #16161c 0%, #0f0f13 100%);
-    background: -moz-linear-gradient(135deg, #16161c 0%, #0f0f13 100%);
     background: linear-gradient(135deg, #16161c 0%, #0f0f13 100%);
     border: 1px solid #1e1e26;
     display: -webkit-box;
@@ -736,7 +687,6 @@ body {
     content: '';
     position: absolute;
     top: 0; left: 0; right: 0; bottom: 0;
-    inset: 0;
     background: -webkit-radial-gradient(circle at 30% 20%, rgba(200, 255, 77, 0.08), transparent 60%);
     background: radial-gradient(circle at 30% 20%, rgba(200, 255, 77, 0.08), transparent 60%);
 }
@@ -744,17 +694,12 @@ body {
 .empty-icon svg {
     position: relative;
     -webkit-animation: floatY 3s ease-in-out infinite;
-    -moz-animation: floatY 3s ease-in-out infinite;
     animation: floatY 3s ease-in-out infinite;
 }
 
 @-webkit-keyframes floatY {
     0%, 100% { -webkit-transform: translateY(0); }
     50% { -webkit-transform: translateY(-4px); }
-}
-@-moz-keyframes floatY {
-    0%, 100% { -moz-transform: translateY(0); }
-    50% { -moz-transform: translateY(-4px); }
 }
 @keyframes floatY {
     0%, 100% { transform: translateY(0); }
@@ -792,7 +737,6 @@ body {
     right: 0;
     height: 1px;
     background: -webkit-linear-gradient(90deg, transparent, #c8ff4d15, transparent);
-    background: -moz-linear-gradient(90deg, transparent, #c8ff4d15, transparent);
     background: linear-gradient(90deg, transparent, #c8ff4d15, transparent);
 }
 
@@ -825,7 +769,6 @@ body {
     color: #6b6b7a;
     cursor: pointer;
     -webkit-transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    -moz-transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     -webkit-box-flex: 0;
     -ms-flex: 0 0 auto;
@@ -867,7 +810,6 @@ body {
     position: relative;
 }
 
-/* ✅ ورودی — همه‌ی vendor prefixها */
 .composer-input-wrap input {
     width: 100%;
     background: #16161c;
@@ -880,22 +822,14 @@ body {
     color: #e8e8ed;
     outline: none;
     -webkit-transition: all 0.2s ease;
-    -moz-transition: all 0.2s ease;
     transition: all 0.2s ease;
     min-height: 40px;
-    /* ✅ Vendor prefixes */
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
-    /* ✅ Firefox */
-    -moz-osx-font-smoothing: grayscale;
-    /* ✅ رفع border-radius در iOS Safari */
-    -webkit-border-radius: 12px;
-    /* ✅ فونت */
     font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Tahoma, sans-serif;
 }
 
-/* ✅ Firefox placeholder */
 .composer-input-wrap input::placeholder {
     color: #3a3a45;
     opacity: 1;
@@ -923,12 +857,10 @@ body {
     box-shadow: 0 0 0 3px rgba(200, 255, 77, 0.05);
 }
 
-/* ✅ Firefox دکمه پاک کردن input */
 .composer-input-wrap input::-moz-clear {
     display: none;
 }
 
-/* ✅ حذف آیکون جستجو در Edge قدیمی */
 .composer-input-wrap input::-ms-clear {
     display: none;
 }
@@ -938,9 +870,7 @@ body {
     height: 40px;
     border-radius: 12px;
     -webkit-border-radius: 12px;
-    background: #c8ff4d;
     background: -webkit-linear-gradient(135deg, #c8ff4d 0%, #b8ef3d 100%);
-    background: -moz-linear-gradient(135deg, #c8ff4d 0%, #b8ef3d 100%);
     background: linear-gradient(135deg, #c8ff4d 0%, #b8ef3d 100%);
     color: #050507;
     border: none;
@@ -955,7 +885,6 @@ body {
     justify-content: center;
     cursor: pointer;
     -webkit-transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    -moz-transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     -webkit-box-flex: 0;
     -ms-flex: 0 0 auto;
@@ -991,7 +920,6 @@ body {
     display: none;
     position: fixed;
     top: 0; right: 0; bottom: 0; left: 0;
-    inset: 0;
     z-index: 200;
     -webkit-box-align: center;
     -ms-flex-align: center;
@@ -1015,9 +943,7 @@ body {
 .modal-overlay {
     position: fixed;
     top: 0; right: 0; bottom: 0; left: 0;
-    inset: 0;
     background: rgba(5, 5, 7, 0.75);
-    /* ✅ backdrop-filter با vendor prefix */
     -webkit-backdrop-filter: blur(8px);
     backdrop-filter: blur(8px);
 }
@@ -1101,7 +1027,6 @@ body {
     -webkit-border-radius: 8px;
     -webkit-transition: background 0.15s ease, -webkit-transform 0.15s ease;
     transition: background 0.15s ease, transform 0.15s ease;
-    -moz-transition: background 0.15s ease, transform 0.15s ease;
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
@@ -1147,7 +1072,6 @@ input:focus {
     outline: none;
 }
 
-/* ✅ Firefox - حذف outline اضافی */
 button::-moz-focus-inner,
 input::-moz-focus-inner {
     border: 0;
@@ -1193,8 +1117,127 @@ input::-moz-focus-inner {
     }
 }
 
-/* ==================== SMALL MOBILE (iPhone SE, 320px) ==================== */
-@media (max-width: 374px) {
+/* ============================================================
+   RESPONSIVE BREAKPOINTS
+   ============================================================ */
+
+/* ==================== ULTRA SMALL (iPhone SE 1st, 320px) ==================== */
+@media (max-width: 359px) {
+    .screen.active {
+        padding-top: max(12px, constant(safe-area-inset-top));
+        padding-top: max(12px, env(safe-area-inset-top, 0px));
+        padding-bottom: max(12px, constant(safe-area-inset-bottom));
+        padding-bottom: max(12px, env(safe-area-inset-bottom, 0px));
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+
+    .screen.active > div:not(.chat-shell) {
+        max-width: 100%;
+    }
+
+    #chatScreen.active {
+        padding: 0;
+    }
+
+    #chatScreen.active > * {
+        border-radius: 0;
+        -webkit-border-radius: 0;
+        border: none;
+        height: 100dvh;
+        max-width: 100%;
+    }
+
+    .messages {
+        padding: 10px 8px;
+    }
+
+    .msg-avatar {
+        width: 22px;
+        height: 22px;
+    }
+
+    .msg-content {
+        max-width: 88%;
+    }
+
+    .bubble {
+        font-size: 13px;
+        padding: 6px 11px;
+        border-radius: 14px 14px 4px 14px;
+        -webkit-border-radius: 14px 14px 4px 14px;
+    }
+
+    .message:not(.own) .bubble {
+        border-radius: 14px 14px 14px 4px;
+        -webkit-border-radius: 14px 14px 14px 4px;
+    }
+
+    .msg-name {
+        font-size: 9.5px;
+    }
+
+    .msg-time {
+        font-size: 9px;
+    }
+
+    .chat-header {
+        padding: 8px 10px;
+        gap: 6px;
+    }
+
+    .icon-btn {
+        width: 32px;
+        height: 32px;
+    }
+
+    .composer {
+        padding: 6px 6px calc(6px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .composer-inner {
+        gap: 3px;
+    }
+
+    .composer-btn,
+    .composer-send {
+        width: 34px;
+        height: 34px;
+        border-radius: 9px;
+        -webkit-border-radius: 9px;
+    }
+
+    .composer-input-wrap input {
+        padding: 8px 10px;
+        font-size: 16px;
+        min-height: 34px;
+        border-radius: 9px;
+        -webkit-border-radius: 9px;
+    }
+
+    .voice-message {
+        min-width: 130px;
+        padding: 5px 9px 5px 7px;
+        gap: 7px;
+    }
+
+    .voice-play-btn {
+        width: 30px;
+        height: 30px;
+    }
+
+    .voice-play-btn svg {
+        width: 11px;
+        height: 11px;
+    }
+
+    .voice-time {
+        font-size: 10px;
+    }
+}
+
+/* ==================== SMALL MOBILE (iPhone SE 2/3, 375px) ==================== */
+@media (min-width: 360px) and (max-width: 413px) {
     .screen.active {
         padding-top: max(16px, constant(safe-area-inset-top));
         padding-top: max(16px, env(safe-area-inset-top, 0px));
@@ -1202,6 +1245,10 @@ input::-moz-focus-inner {
         padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
         padding-left: 12px;
         padding-right: 12px;
+    }
+
+    .screen.active > div:not(.chat-shell) {
+        max-width: 100%;
     }
 
     #chatScreen.active {
@@ -1232,14 +1279,6 @@ input::-moz-focus-inner {
     .bubble {
         font-size: 13.5px;
         padding: 7px 12px;
-    }
-
-    .msg-name {
-        font-size: 10px;
-    }
-
-    .msg-time {
-        font-size: 9.5px;
     }
 
     .chat-header {
@@ -1277,7 +1316,7 @@ input::-moz-focus-inner {
     }
 
     .voice-message {
-        min-width: 140px;
+        min-width: 145px;
         padding: 6px 10px 6px 8px;
         gap: 8px;
     }
@@ -1297,8 +1336,8 @@ input::-moz-focus-inner {
     }
 }
 
-/* ==================== MOBILE (عمومی، تا 640px) ==================== */
-@media (max-width: 640px) {
+/* ==================== STANDARD MOBILE (iPhone 12-15, 414-640px) ==================== */
+@media (min-width: 414px) and (max-width: 640px) {
     .screen.active {
         padding-top: max(20px, constant(safe-area-inset-top));
         padding-top: max(20px, env(safe-area-inset-top, 0px));
@@ -1308,10 +1347,12 @@ input::-moz-focus-inner {
         padding-right: 16px;
     }
 
+    .screen.active > div:not(.chat-shell) {
+        max-width: 100%;
+    }
+
     #chatScreen.active {
         padding: 0;
-        -webkit-box-align: stretch;
-        -ms-flex-align: stretch;
         align-items: stretch;
     }
 
@@ -1385,11 +1426,13 @@ input::-moz-focus-inner {
     }
 }
 
-/* ==================== LANDSCAPE MOBILE ==================== */
+/* ==================== MOBILE LANDSCAPE ==================== */
 @media (max-height: 500px) and (orientation: landscape) {
     .screen.active {
-        padding-top: max(12px, env(safe-area-inset-top, 0px));
-        padding-bottom: max(12px, env(safe-area-inset-bottom, 0px));
+        padding-top: max(8px, env(safe-area-inset-top, 0px));
+        padding-bottom: max(8px, env(safe-area-inset-bottom, 0px));
+        padding-left: 12px;
+        padding-right: 12px;
     }
 
     #chatScreen.active > * {
@@ -1400,15 +1443,15 @@ input::-moz-focus-inner {
     }
 
     .chat-header {
-        padding: 8px 14px;
+        padding: 6px 12px;
     }
 
     .messages {
-        padding: 12px 16px;
+        padding: 10px 14px;
     }
 
     .msg-content {
-        max-width: 60%;
+        max-width: 65%;
     }
 
     .composer {
@@ -1437,11 +1480,20 @@ input::-moz-focus-inner {
     }
 }
 
-/* ==================== TABLET ==================== */
-@media (min-width: 641px) and (max-width: 1023px) {
+/* ==================== TABLET PORTRAIT (iPad Mini, 641-820px) ==================== */
+@media (min-width: 641px) and (max-width: 820px) {
+    .screen.active {
+        padding-top: max(32px, env(safe-area-inset-top, 0px));
+        padding-bottom: max(32px, env(safe-area-inset-bottom, 0px));
+    }
+
+    .screen.active > div:not(.chat-shell) {
+        max-width: 460px;
+    }
+
     .chat-shell {
         max-width: 640px;
-        height: 90dvh;
+        height: 92dvh;
     }
 
     .msg-avatar {
@@ -1462,8 +1514,45 @@ input::-moz-focus-inner {
     }
 }
 
-/* ==================== DESKTOP ==================== */
-@media (min-width: 1024px) {
+/* ==================== TABLET LANDSCAPE / SMALL LAPTOP (821-1023px) ==================== */
+@media (min-width: 821px) and (max-width: 1023px) {
+    .chat-shell {
+        max-width: 720px;
+        height: 90dvh;
+    }
+
+    .screen.active > div:not(.chat-shell) {
+        max-width: 460px;
+    }
+
+    .msg-avatar {
+        width: 32px;
+        height: 32px;
+    }
+
+    .msg-content {
+        max-width: 70%;
+    }
+
+    .bubble {
+        font-size: 14.5px;
+    }
+
+    .composer-input-wrap input {
+        font-size: 16px;
+    }
+}
+
+/* ==================== DESKTOP (1024-1279px) ==================== */
+@media (min-width: 1024px) and (max-width: 1279px) {
+    .screen.active > div:not(.chat-shell) {
+        max-width: 460px;
+    }
+
+    .chat-shell {
+        max-width: 720px;
+    }
+
     .msg-avatar {
         width: 32px;
         height: 32px;
@@ -1482,13 +1571,18 @@ input::-moz-focus-inner {
     }
 }
 
-@media (min-width: 1280px) {
+/* ==================== LARGE DESKTOP (1280-1919px) ==================== */
+@media (min-width: 1280px) and (max-width: 1919px) {
+    .screen.active > div:not(.chat-shell) {
+        max-width: 480px;
+    }
+
     .chat-shell {
-        max-width: 720px;
+        max-width: 780px;
     }
 
     .msg-content {
-        max-width: 460px;
+        max-width: 480px;
     }
 
     .messages {
@@ -1501,10 +1595,14 @@ input::-moz-focus-inner {
     }
 }
 
-/* ==================== LARGE DESKTOP / 2K ==================== */
-@media (min-width: 1920px) {
+/* ==================== 2K (1920-2559px) ==================== */
+@media (min-width: 1920px) and (max-width: 2559px) {
+    .screen.active > div:not(.chat-shell) {
+        max-width: 520px;
+    }
+
     .chat-shell {
-        max-width: 820px;
+        max-width: 900px;
     }
 
     .chat-header {
@@ -1521,7 +1619,7 @@ input::-moz-focus-inner {
     }
 
     .msg-content {
-        max-width: 520px;
+        max-width: 560px;
     }
 
     .bubble {
@@ -1583,10 +1681,14 @@ input::-moz-focus-inner {
     }
 }
 
-/* ==================== 4K / TV ==================== */
-@media (min-width: 2560px) {
+/* ==================== 4K (2560-3199px) ==================== */
+@media (min-width: 2560px) and (max-width: 3199px) {
+    .screen.active > div:not(.chat-shell) {
+        max-width: 640px;
+    }
+
     .chat-shell {
-        max-width: 1000px;
+        max-width: 1100px;
         border-radius: 28px;
         -webkit-border-radius: 28px;
     }
@@ -1611,7 +1713,7 @@ input::-moz-focus-inner {
     }
 
     .msg-content {
-        max-width: 640px;
+        max-width: 700px;
     }
 
     .bubble {
@@ -1662,7 +1764,7 @@ input::-moz-focus-inner {
     }
 
     .voice-message {
-        min-width: 280px;
+        min-width: 300px;
         padding: 12px 24px 12px 18px;
         gap: 14px;
     }
@@ -1696,47 +1798,177 @@ input::-moz-focus-inner {
     }
 }
 
-/* ==================== TV غول ==================== */
+/* ==================== TV / 5K / 8K (3200px+) ==================== */
 @media (min-width: 3200px) {
+    .screen.active > div:not(.chat-shell) {
+        max-width: 800px;
+    }
+
     .chat-shell {
-        max-width: 1400px;
-        border-radius: 36px;
-        -webkit-border-radius: 36px;
+        max-width: 1500px;
+        border-radius: 40px;
+        -webkit-border-radius: 40px;
     }
 
     .chat-header {
-        padding: 28px 40px;
+        padding: 32px 48px;
+        gap: 22px;
+    }
+
+    .chat-header img {
+        width: 72px !important;
+        height: 72px !important;
     }
 
     .messages {
-        padding: 56px 48px;
-    }
-
-    .bubble {
-        font-size: 22px;
-        padding: 18px 28px;
-        line-height: 1.65;
-    }
-
-    .msg-content {
-        max-width: 900px;
+        padding: 64px 56px;
     }
 
     .msg-avatar {
-        width: 56px;
-        height: 56px;
+        width: 64px;
+        height: 64px;
     }
 
-    .composer-input-wrap input {
-        font-size: 22px;
-        padding: 20px 28px;
-        min-height: 72px;
+    .msg-content {
+        max-width: 1000px;
+    }
+
+    .bubble {
+        font-size: 24px;
+        padding: 20px 32px;
+        line-height: 1.7;
+        border-radius: 30px 30px 8px 30px;
+        -webkit-border-radius: 30px 30px 8px 30px;
+    }
+
+    .message:not(.own) .bubble {
+        border-radius: 30px 30px 30px 8px;
+        -webkit-border-radius: 30px 30px 30px 8px;
+    }
+
+    .msg-name {
+        font-size: 18px;
+    }
+
+    .msg-time {
+        font-size: 16px;
+    }
+
+    .composer {
+        padding: 28px 36px;
     }
 
     .composer-btn,
     .composer-send {
+        width: 80px;
+        height: 80px;
+        border-radius: 22px;
+        -webkit-border-radius: 22px;
+    }
+
+    .composer-btn svg,
+    .composer-send svg {
+        width: 34px;
+        height: 34px;
+    }
+
+    .composer-input-wrap input {
+        font-size: 24px;
+        padding: 24px 32px;
+        min-height: 80px;
+        border-radius: 22px;
+        -webkit-border-radius: 22px;
+    }
+
+    .voice-message {
+        min-width: 400px;
+        padding: 18px 32px 18px 24px;
+        gap: 20px;
+    }
+
+    .voice-play-btn {
+        width: 64px;
+        height: 64px;
+    }
+
+    .voice-play-btn svg {
+        width: 24px;
+        height: 24px;
+    }
+
+    .voice-wave {
+        height: 30px;
+        gap: 4px;
+    }
+
+    .voice-wave span {
+        width: 5px;
+    }
+
+    .voice-wave span:nth-child(1)  { height: 10px; }
+    .voice-wave span:nth-child(2)  { height: 20px; }
+    .voice-wave span:nth-child(3)  { height: 14px; }
+    .voice-wave span:nth-child(4)  { height: 26px; }
+    .voice-wave span:nth-child(5)  { height: 16px; }
+    .voice-wave span:nth-child(6)  { height: 22px; }
+    .voice-wave span:nth-child(7)  { height: 12px; }
+    .voice-wave span:nth-child(8)  { height: 22px; }
+    .voice-wave span:nth-child(9)  { height: 15px; }
+    .voice-wave span:nth-child(10) { height: 24px; }
+    .voice-wave span:nth-child(11) { height: 14px; }
+    .voice-wave span:nth-child(12) { height: 18px; }
+
+    .voice-time {
+        font-size: 20px;
+    }
+
+    .icon-btn {
         width: 72px;
         height: 72px;
+        border-radius: 18px;
+        -webkit-border-radius: 18px;
+    }
+
+    .icon-btn svg {
+        width: 32px;
+        height: 32px;
+    }
+}
+
+/* ==================== ULTRA-WIDE SCREENS (Aspect Ratio) ==================== */
+@media (min-aspect-ratio: 21/9) and (min-width: 1920px) {
+    .screen.active {
+        padding-top: max(16px, env(safe-area-inset-top, 0px));
+        padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
+    }
+
+    .chat-shell {
+        height: 94dvh;
+    }
+}
+
+/* ==================== FOLDABLE PHONES ==================== */
+@media (max-width: 320px) {
+    .bubble {
+        font-size: 12.5px;
+        padding: 6px 10px;
+    }
+
+    .msg-avatar {
+        width: 20px;
+        height: 20px;
+    }
+
+    .composer-btn,
+    .composer-send {
+        width: 32px;
+        height: 32px;
+    }
+
+    .composer-input-wrap input {
+        font-size: 16px;
+        padding: 7px 9px;
+        min-height: 32px;
     }
 }
 
@@ -1755,6 +1987,11 @@ input::-moz-focus-inner {
     }
 }
 
+/* ==================== DARK MODE PREFERENCE ==================== */
+@media (prefers-color-scheme: light) {
+    /* اپ خودش دارک هست، پس نیازی به override نیست */
+}
+
 /* ==================== PRINT ==================== */
 @media print {
     body {
@@ -1768,29 +2005,24 @@ input::-moz-focus-inner {
 }
 
 /* ============================================================
-   ✅ BROWSER-SPECIFIC FIXES
+   BROWSER-SPECIFIC FIXES
    ============================================================ */
 
 /* ✅ Safari (Desktop & iOS) */
 @supports (-webkit-touch-callout: none) {
     .chat-shell {
-        /* ✅ رفع باگ border-radius در iOS */
         -webkit-mask-image: -webkit-radial-gradient(white, black);
         mask-image: -webkit-radial-gradient(white, black);
     }
 
-    /* ✅ ورودی‌های iOS */
     input,
     textarea {
-        /* ✅ جلوگیری از زوم */
         font-size: 16px;
-        /* ✅ رفع باگ */
         border-radius: 12px;
         -webkit-border-radius: 12px;
         -webkit-appearance: none;
     }
 
-    /* ✅ iOS overscroll */
     .messages {
         -webkit-overflow-scrolling: touch;
     }
@@ -1798,34 +2030,26 @@ input::-moz-focus-inner {
 
 /* ✅ Firefox */
 @-moz-document url-prefix() {
-    .chat-shell {
-        /* ✅ Firefox بهتر border-radius رو رندر می‌کنه */
-    }
-
-    /* ✅ Firefox scrollbar */
     * {
         scrollbar-width: thin;
         scrollbar-color: #2a2a35 transparent;
     }
 
-    /* ✅ Firefox دکمه‌ها */
     button {
-        /* ✅ حذف inner border */
         padding: 0;
         font-family: inherit;
     }
 }
 
-/* ✅ Chrome/Edge (Chromium) */
+/* ✅ Chromium 105+ */
 @supports (selector(:has(*))) {
-    /* ✅ فقط برای Chromium 105+ */
     .emoji-item:focus-visible {
         outline: 2px solid #c8ff4d;
         outline-offset: 2px;
     }
 }
 
-/* ✅ حذف فلش‌های input type=number (اگر روزی استفاده کردیم) */
+/* ✅ حذف فلش‌های input number */
 input[type="number"]::-webkit-outer-spin-button,
 input[type="number"]::-webkit-inner-spin-button {
     -webkit-appearance: none;
@@ -1834,4 +2058,9 @@ input[type="number"]::-webkit-inner-spin-button {
 input[type="number"] {
     -moz-appearance: textfield;
     appearance: textfield;
+}
+
+/* ✅ رفع outline اضافی در Firefox */
+:focus:not(:focus-visible) {
+    outline: none;
 }
